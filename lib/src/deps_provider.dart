@@ -2,6 +2,20 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:spyglass/src/deps.dart';
 
+T? useDependency<T extends Object>([Object? key]) {
+  final context = useContext();
+  final deps = DepsProvider.of(context);
+  return useStream(deps.watch<T>(key)).data;
+}
+
+extension DepsContext on BuildContext {
+  Deps get deps => DepsProvider.of(this);
+
+  T get<T extends Object>([Object? key]) => deps.get<T>(key);
+  T watch<T extends Object>([Object? key]) =>
+      DepsProvider.watch<T>(this, key: key);
+}
+
 class DepsProvider extends HookWidget {
   const DepsProvider({
     super.key,
@@ -12,17 +26,24 @@ class DepsProvider extends HookWidget {
   final Deps? deps;
   final Widget child;
 
+  static final _depsAspect = Object();
+
   static Deps of(BuildContext context) {
-    return InheritedModel.inheritFrom<_DepsInherited>(context)?.scope ??
+    return InheritedModel.inheritFrom<_DepsInherited>(
+          context,
+          aspect: _depsAspect,
+        )?.scope ??
         globalDeps;
   }
 
-  static T watch<T>(BuildContext context, {Object? key}) {
-    final effectiveKey = key ?? T;
+  static T watch<T extends Object>(BuildContext context, {Object? key}) {
+    final effectiveKey = DependencyKey<T>(key);
     return InheritedModel.inheritFrom<_DepsInherited>(
       context,
       aspect: effectiveKey,
-    )?.scope.get(effectiveKey) as T;
+    )!
+        .scope
+        .get<T>(key);
   }
 
   @override
@@ -73,7 +94,7 @@ class _DepsInherited extends InheritedModel<Object> {
 
   @override
   bool updateShouldNotify(_DepsInherited oldWidget) {
-    return snapshot != oldWidget.snapshot;
+    return scope != oldWidget.scope || snapshot != oldWidget.snapshot;
   }
 
   @override
@@ -81,10 +102,14 @@ class _DepsInherited extends InheritedModel<Object> {
     _DepsInherited oldWidget,
     Set<Object> dependencies,
   ) {
-    if (oldWidget.scope != scope) {
-      return true;
+    if (dependencies.length == 1 &&
+        dependencies.single == DepsProvider._depsAspect) {
+      return oldWidget.scope != scope;
     }
     for (final key in dependencies) {
+      if (key == DepsProvider._depsAspect) {
+        continue;
+      }
       if (snapshot?.values[key] != oldWidget.snapshot?.values[key]) {
         return true;
       }
