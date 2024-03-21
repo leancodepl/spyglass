@@ -1,11 +1,61 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:spyglass/src/deps.dart';
+import 'package:spyglass/spyglass.dart';
 
 T? useDependency<T extends Object>([Object? key]) {
   final context = useContext();
   final deps = DepsProvider.of(context);
   return useStream(deps.watch<T>(key)).data;
+}
+
+void useRegisterDependency<T extends Object>({
+  required Constructor<T> create,
+  Disposer<T>? dispose,
+  Object? key,
+  String? debugLabel,
+}) {
+  final context = useContext();
+  final deps = DepsProvider.of(context);
+  useEffect(() {
+    final dependency = Dependency<T>(
+      create: create,
+      dispose: dispose,
+      key: key,
+      debugLabel: debugLabel,
+    );
+    deps.register(dependency);
+    return () => deps.unregister(dependency.key);
+  });
+}
+
+class DepsHook extends StatefulWidget {
+  const DepsHook({
+    super.key,
+    required this.register,
+    this.child,
+  });
+
+  final void Function(Deps deps) register;
+  final Widget? child;
+
+  @override
+  State<DepsHook> createState() => _DepsHookState();
+}
+
+class _DepsHookState extends State<DepsHook> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final deps = DepsProvider.of(context);
+
+    widget.register(deps);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child ?? const SizedBox();
+  }
 }
 
 extension DepsContext on BuildContext {
@@ -20,10 +70,12 @@ class DepsProvider extends HookWidget {
   const DepsProvider({
     super.key,
     this.deps,
+    this.register,
     required this.child,
   });
 
   final Deps? deps;
+  final void Function(Deps deps)? register;
   final Widget child;
 
   static final _depsAspect = Object();
@@ -65,7 +117,17 @@ class DepsProvider extends HookWidget {
       return sub.cancel;
     }, [deps]);
 
-    return _DepsInherited(scope: deps, snapshot: snapshot.value, child: child);
+    Widget result = _DepsInherited(
+      scope: deps,
+      snapshot: snapshot.value,
+      child: child,
+    );
+
+    if (register != null) {
+      result = DepsHook(register: register!, child: result);
+    }
+
+    return result;
   }
 }
 

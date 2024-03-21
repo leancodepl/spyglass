@@ -32,6 +32,14 @@ class Dependency<T extends Object> {
         _disposer = dispose,
         key = DependencyKey<T>(key);
 
+  Dependency.value(
+    T value, {
+    Object? key,
+    this.debugLabel,
+  })  : _create = ((_) => value),
+        _disposer = ((_) {}),
+        key = DependencyKey<T>(key);
+
   final Constructor<T> _create;
   final Disposer<T>? _disposer;
   final DependencyKey<T> key;
@@ -47,7 +55,7 @@ class Dependency<T extends Object> {
     if (_value case T value?) {
       return value;
     } else {
-      throw StateError('Depenency is not yet initialized.');
+      throw StateError('Dependency is not yet initialized.');
     }
   }
 
@@ -78,10 +86,11 @@ typedef Constructor<T> = FutureOr<T> Function(Deps scope);
 typedef Disposer<T> = async.FutureOr<void> Function(T object);
 
 class Deps extends EventNotifier<DepsEvent> {
+  /// Input [values] are copied.
   Deps._({
     required this.parent,
     Map<Object, Dependency>? values,
-  }) : _values = values ?? {} {
+  }) : _values = {...?values} {
     _parentSubscription = parent?.events.listen((event) {
       switch (event) {
         case DependencyChanged(:final key):
@@ -94,19 +103,30 @@ class Deps extends EventNotifier<DepsEvent> {
     });
   }
 
+  /// Creates a completely empty [Deps], detached from the [globalDeps] root
+  /// ancestor.
   Deps.detached() : this._(parent: null);
 
+  /// Returns the current global [Deps] instance. See also [globalDeps].
   factory Deps() => globalDeps;
 
+  /// The root [Deps] instance. This is the ancestor of all other [Deps].
+  /// Most likely this is the same as [globalDeps] unless you're using
+  /// [Deps.runZoned].
   static final root = Deps.detached();
 
+  /// Creates a child scope of this [Deps].
   Deps fork() => Deps._(parent: this);
 
+  /// Creates a copy of this instance. The copy will have the same parent and
+  /// registered values.
   Deps copy() => Deps._(
         parent: parent,
-        values: {..._values},
+        values: _values,
       );
 
+  /// Collects all values from this [Deps] and its ancestors into a single
+  /// instance.
   Deps flattened() => Deps._(
         parent: parent,
         values: {
@@ -114,11 +134,15 @@ class Deps extends EventNotifier<DepsEvent> {
         },
       );
 
+  /// Creates a copy of this instance with the same values but detached from
+  /// its parent.
   Deps detached() => Deps._(
         parent: null,
-        values: {..._values},
+        values: _values,
       );
 
+  /// Run the given [body] in a new [async.Zone] with this [Deps]
+  /// as [globalDeps].
   R runZoned<R>(R Function() body) {
     return async.runZoned(
       body,
@@ -134,6 +158,8 @@ class Deps extends EventNotifier<DepsEvent> {
 
   final Map<Object, Dependency> _values;
 
+  /// Iterate over the scope ancestor chain, starting from this [Deps]
+  /// (inclusive) and ending with the root scope.
   Iterable<Deps> get _scopeChain sync* {
     Deps? scope = this;
     while (scope != null) {
@@ -144,6 +170,7 @@ class Deps extends EventNotifier<DepsEvent> {
 
   Iterable<Dependency<Object>> get entries => _values.values;
 
+  /// Add or update a dependency.
   void Function() register<T extends Object>(Dependency<T> dependency) {
     unregister(dependency.key);
     _values[dependency.key] = dependency;
@@ -154,6 +181,7 @@ class Deps extends EventNotifier<DepsEvent> {
     return () => unregister(dependency.key);
   }
 
+  /// Remove the dependency under the specified key.
   void unregister<T extends Object>([Object? key]) {
     final effectiveKey = DependencyKey<T>(key);
     final value = _values.remove(effectiveKey);
@@ -167,6 +195,8 @@ class Deps extends EventNotifier<DepsEvent> {
     _values.clear();
   }
 
+  /// Checks whether a dependency with the given key is registered in this
+  /// [Deps] or any of its ancestors.
   bool contains<T>([Object? key]) {
     final effectiveKey = DependencyKey<T>(key);
 
