@@ -217,29 +217,6 @@ class Deps extends EventNotifier<DepsEvent> {
   /// Creates a child scope of this [Deps].
   Deps fork() => Deps._(parent: this);
 
-  /// Creates a copy of this instance. The copy will have the same parent and
-  /// registered values.
-  Deps copy() => Deps._(
-        parent: parent,
-        values: _values,
-      );
-
-  /// Collects all values from this [Deps] and its ancestors into a single
-  /// instance.
-  Deps flattened() => Deps._(
-        parent: parent,
-        values: {
-          for (final scope in _scopeChain.toList().reversed) ...scope._values,
-        },
-      );
-
-  /// Creates a copy of this instance with the same values but detached from
-  /// its parent.
-  Deps detached() => Deps._(
-        parent: null,
-        values: _values,
-      );
-
   /// Run the given [body] in a new [Zone] with this [Deps]
   /// as [globalDeps].
   R runZoned<R>(R Function() body) {
@@ -259,7 +236,7 @@ class Deps extends EventNotifier<DepsEvent> {
 
   /// Iterate over the scope ancestor chain, starting from this [Deps]
   /// (inclusive) and ending with the root scope.
-  Iterable<Deps> get _scopeChain sync* {
+  Iterable<Deps> get scopeChain sync* {
     Deps? scope = this;
     while (scope != null) {
       yield scope;
@@ -267,11 +244,22 @@ class Deps extends EventNotifier<DepsEvent> {
     }
   }
 
-  Iterable<Deps> get scopeChain => _scopeChain;
+  /// Gathers all entries accessible from this deps. Potentially expensive,
+  /// depending on how deep the tree is and how many entries there are.
+  Iterable<Dependency<Object>> getAllEntries() {
+    final map = <Type, Dependency<Object>>{};
+    for (final scope in scopeChain.toList().reversed) {
+      for (final entry in scope.ownEntries) {
+        map[entry.key] = entry;
+      }
+    }
+    return map.values;
+  }
 
-  Iterable<Dependency<Object>> get entries =>
+  Iterable<Dependency<Object>> get ownEntries =>
       _values.values.map((e) => e.dependency);
 
+  /// Peek at the value of a dependency without resolving it.
   T? peek<T extends Object>([DependencyKey? key]) =>
       switch (_tryGetDependency<T>(key)?._currentValue) {
         null => null,
@@ -332,7 +320,7 @@ class Deps extends EventNotifier<DepsEvent> {
   bool isRegistered<T>([Type? key]) {
     final effectiveKey = key ?? T;
 
-    return _scopeChain.any((scope) => scope._values.containsKey(effectiveKey));
+    return scopeChain.any((scope) => scope._values.containsKey(effectiveKey));
   }
 
   bool _isRegisteredHere<T>([DependencyKey? key]) {
@@ -345,7 +333,7 @@ class Deps extends EventNotifier<DepsEvent> {
     DependencyKey? key,
   ]) {
     final effectiveKey = key ?? T;
-    for (final scope in _scopeChain) {
+    for (final scope in scopeChain) {
       final value = scope._values[effectiveKey];
       if (value != null) {
         return value as ManagedDependency<T>;

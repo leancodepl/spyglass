@@ -2,28 +2,26 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:spyglass/spyglass.dart';
 
-T? useDependency<T extends Object>() {
-  final context = useContext();
-  final deps = DepsProvider.of(context);
-  return useStream(deps.watch<T>()).data;
+Deps useDeps() {
+  return DepsProvider.of(useContext());
 }
 
-void useRegisterDependency<T extends Object>({
-  required Constructor<T> create,
-  Disposer<T>? dispose,
-  String? debugLabel,
-}) {
+T useDependency<T extends Object>() {
+  final context = useContext();
+  final deps = DepsProvider.of(context);
+  return useStream(deps.watch<T>(), initialData: deps.get<T>()).requireData;
+}
+
+void useRegisterDeps(
+  List<Dependency<Object>> dependencies, [
+  List<Object?> keys = const [],
+]) {
   final context = useContext();
   final deps = DepsProvider.of(context);
   useEffect(() {
-    final dependency = Dependency<T>(
-      create: create,
-      dispose: dispose,
-      debugLabel: debugLabel,
-    );
-    deps.add(dependency);
-    return () => deps.remove(dependency.key);
-  });
+    final unregister = deps.addMany(dependencies);
+    return unregister;
+  }, keys);
 }
 
 extension DepsContext on BuildContext {
@@ -92,7 +90,7 @@ class DepsProvider extends HookWidget {
 
     useEffect(() {
       final sub = deps.events.listen((e) {
-        snapshot.value = _DepsSnapshot.of(deps);
+        snapshot.value = _DepsSnapshot.from(deps);
       });
       return sub.cancel;
     }, [deps]);
@@ -139,13 +137,17 @@ class DepsProvider extends HookWidget {
 class _DepsSnapshot {
   const _DepsSnapshot(this.values);
 
-  factory _DepsSnapshot.of(Deps deps) {
+  factory _DepsSnapshot.from(Deps deps) {
     final values = {
-      for (final scope in deps.scopeChain.toList().reversed)
-        for (final entry in scope.entries) entry.key: scope.peek(entry.key),
+      for (final entry in deps.getAllEntries()) entry.key: deps.peek(entry.key),
     };
     return _DepsSnapshot(values);
   }
+
+  _DepsSnapshot updateWithKey(Deps deps, Type key) => _DepsSnapshot({
+        ...values,
+        key: deps.peek(key),
+      });
 
   final Map<Object, Object?> values;
 }
