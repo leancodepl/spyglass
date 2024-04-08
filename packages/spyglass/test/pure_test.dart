@@ -28,16 +28,17 @@ void main() {
   });
 
   test('watch mutable', () async {
-    deps.add(Dependency(create: (deps) => Baz(label: 'first')));
-    deps.add(
-      Dependency(
-        create: (deps) => Qux(baz: deps.get()),
-        when: (deps) => deps.watch<Baz>(),
-        update: (deps, oldValue) => oldValue..baz = deps.get(),
-      ),
-    );
+    deps
+      ..add(Dependency(create: (deps) => Baz(label: 'first')))
+      ..add(
+        Dependency(
+          create: (deps) => Qux(baz: deps.get()),
+          when: (deps) => deps.watch<Baz>(),
+          update: (deps, oldValue) => oldValue..baz = deps.get(),
+        ),
+      );
 
-    await Future<void>.delayed(Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 1));
 
     deps.add(Dependency.value(Baz(label: 'second')));
 
@@ -45,16 +46,17 @@ void main() {
   });
 
   test('watch immutable', () async {
-    deps.add(Dependency(create: (deps) => Baz(label: 'first')));
-    deps.add(
-      Dependency(
-        create: (deps) => Qux(baz: deps.get()),
-        when: (deps) => deps.watch<Baz>(),
-        update: (deps, oldValue) => Qux(baz: deps.get()),
-      ),
-    );
+    deps
+      ..add(Dependency(create: (deps) => Baz(label: 'first')))
+      ..add(
+        Dependency(
+          create: (deps) => Qux(baz: deps.get()),
+          when: (deps) => deps.watch<Baz>(),
+          update: (deps, oldValue) => Qux(baz: deps.get()),
+        ),
+      );
 
-    await Future<void>.delayed(Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 1));
 
     deps.add(Dependency.value(Baz(label: 'second')));
 

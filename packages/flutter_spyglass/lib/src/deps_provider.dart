@@ -18,10 +18,13 @@ void useRegisterDeps(
 ]) {
   final context = useContext();
   final deps = DepsProvider.of(context);
-  useEffect(() {
-    final unregister = deps.addMany(dependencies);
-    return unregister;
-  }, keys);
+  useEffect(
+    () {
+      final unregister = deps.addMany(dependencies);
+      return unregister;
+    },
+    keys,
+  );
 }
 
 extension DepsContext on BuildContext {
@@ -77,46 +80,45 @@ class DepsProvider extends HookWidget {
         parentScope,
       ],
     );
-    useEffect(() {
-      if (introduceScope && this.deps == null) {
-        return () {
-          deps.dispose();
-        };
-      }
-      return null;
-    }, [deps, introduceScope, this.deps]);
+    useEffect(
+      () {
+        if (introduceScope && this.deps == null) {
+          return deps.dispose;
+        }
+        return null;
+      },
+      [deps, introduceScope, this.deps],
+    );
 
     final snapshot = useState<_DepsSnapshot?>(null);
 
-    useEffect(() {
-      final sub = deps.events.listen((e) {
-        snapshot.value = _DepsSnapshot.from(deps);
-      });
-      return sub.cancel;
-    }, [deps]);
+    useEffect(
+      () {
+        final sub = deps.events.listen((e) {
+          snapshot.value = _DepsSnapshot.from(deps);
+        });
+        return sub.cancel;
+      },
+      [deps],
+    );
 
     final registerCalled = useRef(false);
     final register = this.register;
 
-    useEffect(() {
-      if (registerCalled.value || register == null) {
-        return null;
-      }
-
-      registerCalled.value = true;
-
-      for (final dep in register) {
-        deps.add(dep);
-      }
-
-      final keys = register.map((dep) => dep.key).toList();
-
-      return () {
-        for (final key in keys) {
-          deps.remove(key);
+    useEffect(
+      () {
+        if (registerCalled.value || register == null) {
+          return null;
         }
-      };
-    }, [deps, register]);
+
+        registerCalled.value = true;
+
+        final unregister = deps.addMany(register);
+
+        return unregister;
+      },
+      [deps, register?.map((e) => e.key).toList()],
+    );
 
     return _DepsInherited(
       deps: deps,

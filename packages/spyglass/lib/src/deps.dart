@@ -86,6 +86,7 @@ class Dependency<T extends Object> {
   /// NOTE
   /// This method is required to retain generic type information when creating
   /// a [ManagedDependency] instance in e.g. [Deps.addMany]
+  // ignore: comment_references
   /// and [DepsProvider.register] from flutter_spyglass.
   ManagedDependency<T> _toManaged(Deps deps) => ManagedDependency(this, deps);
 }
@@ -105,6 +106,7 @@ class ManagedDependency<T extends Object> {
   bool _debugCreateCalled = false;
   bool _isDisposed = false;
 
+  // ignore: avoid_void_async
   void _ensureInitialized() async {
     if (_isDisposed) {
       throw StateError('Dependency is disposed');
@@ -118,15 +120,20 @@ class ManagedDependency<T extends Object> {
     _debugCreateCalled = true;
     _currentValue = dependency.create(deps);
     _currentValue = await _currentValue!;
+    // reason: ManagedDependency and Deps work in tandem
+    // ignore: invalid_use_of_protected_member
     deps.notify(DependencyChanged(key: key));
+
     if ((dependency.when, dependency.update)
         case (final when_?, final update?)) {
-      _whenSubscription?.cancel();
+      unawaited(_whenSubscription?.cancel());
       _whenSubscription = when_(deps)
-          .map((_) => update(deps, _currentValue as T))
+          .map((_) => update(deps, _currentValue! as T))
           .listen((newValue) {
         if (newValue != _currentValue) {
           _currentValue = newValue;
+          // reason: ManagedDependency and Deps work in tandem
+          // ignore: invalid_use_of_protected_member
           deps.notify(DependencyChanged(key: key));
         }
       });
@@ -136,7 +143,7 @@ class ManagedDependency<T extends Object> {
   T resolve() {
     _ensureInitialized();
     return switch (_currentValue) {
-      T value => value,
+      final T value => value,
       null => throw StateError('Initialization error. This is a bug.'),
       Future<T>() => throw StateError('Value has not been resolved yet'),
     };
@@ -145,7 +152,7 @@ class ManagedDependency<T extends Object> {
   T? tryResolve() {
     _ensureInitialized();
     return switch (_currentValue) {
-      T value => value,
+      final T value => value,
       null => null,
       Future<T>() => null,
     };
@@ -154,7 +161,7 @@ class ManagedDependency<T extends Object> {
   Future<T> resolveAsync() async {
     _ensureInitialized();
     return switch (_currentValue) {
-      FutureOr<T> value => value,
+      final FutureOr<T> value => value,
       null => throw StateError('Initialization error. This is a bug.'),
     };
   }
@@ -169,7 +176,7 @@ class ManagedDependency<T extends Object> {
       return;
     }
     _isDisposed = true;
-    _whenSubscription?.cancel();
+    await _whenSubscription?.cancel();
     await _controller.close();
     if ((dependency.dispose, _currentValue)
         case (final dispose?, final value?)) {
@@ -180,6 +187,9 @@ class ManagedDependency<T extends Object> {
 }
 
 class Deps extends EventNotifier<DepsEvent> {
+  /// Returns the current global [Deps] instance. See also [globalDeps].
+  factory Deps() => globalDeps;
+
   /// Input [values] are copied.
   Deps._({
     required this.parent,
@@ -187,6 +197,15 @@ class Deps extends EventNotifier<DepsEvent> {
   }) : _values = {...?values} {
     _setupParentSubscription();
   }
+
+  /// Creates a completely empty [Deps], detached from the [globalDeps] root
+  /// ancestor.
+  Deps.detached() : this._(parent: null);
+
+  /// The root [Deps] instance. This is the ancestor of all other [Deps].
+  /// Most likely this is the same as [globalDeps] unless you're using
+  /// [Deps.runZoned].
+  static final root = Deps.detached();
 
   void _setupParentSubscription() {
     _parentSubscription =
@@ -196,23 +215,11 @@ class Deps extends EventNotifier<DepsEvent> {
   bool _isNotShadowedEvent(DepsEvent e) {
     // Events are shadowed when this scope already has the specified key.
     return switch (e) {
-      DependencyRegistered(:final key) => !_isRegisteredHere(key),
-      DependencyUnregistered(:final key) => !_isRegisteredHere(key),
-      DependencyChanged(:final key) => !_isRegisteredHere(key),
+      DependencyRegistered(:final key) => !_isRegisteredHere<Object>(key),
+      DependencyUnregistered(:final key) => !_isRegisteredHere<Object>(key),
+      DependencyChanged(:final key) => !_isRegisteredHere<Object>(key),
     };
   }
-
-  /// Creates a completely empty [Deps], detached from the [globalDeps] root
-  /// ancestor.
-  Deps.detached() : this._(parent: null);
-
-  /// Returns the current global [Deps] instance. See also [globalDeps].
-  factory Deps() => globalDeps;
-
-  /// The root [Deps] instance. This is the ancestor of all other [Deps].
-  /// Most likely this is the same as [globalDeps] unless you're using
-  /// [Deps.runZoned].
-  static final root = Deps.detached();
 
   /// Creates a child scope of this [Deps].
   Deps fork() => Deps._(parent: this);
@@ -263,7 +270,7 @@ class Deps extends EventNotifier<DepsEvent> {
   T? peek<T extends Object>([DependencyKey? key]) =>
       switch (_tryGetDependency<T>(key)?._currentValue) {
         null => null,
-        T value => value,
+        final T value => value,
         Future<T> _ => null,
       };
 
@@ -306,13 +313,6 @@ class Deps extends EventNotifier<DepsEvent> {
     if (value != null) {
       notify(DependencyUnregistered(key: effectiveKey));
     }
-  }
-
-  void clear() {
-    for (final value in _values.values) {
-      unawaited(Future.sync(() => value.dispose()));
-    }
-    _values.clear();
   }
 
   /// Checks whether a dependency with the given key is registered in this
@@ -419,11 +419,13 @@ extension DepsWatchMany on Deps {
       .map((list) => (list[0] as A, list[1] as B, list[2] as C, list[3] as D));
 
   Stream<(A, B, C, D, E)> watch5<A, B, C, D, E>() =>
-      watchMany([A, B, C, D, E]).map((list) => (
-            list[0] as A,
-            list[1] as B,
-            list[2] as C,
-            list[3] as D,
-            list[4] as E
-          ));
+      watchMany([A, B, C, D, E]).map(
+        (list) => (
+          list[0] as A,
+          list[1] as B,
+          list[2] as C,
+          list[3] as D,
+          list[4] as E
+        ),
+      );
 }

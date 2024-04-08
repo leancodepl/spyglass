@@ -14,7 +14,7 @@ class MainApp extends StatelessWidget {
     return DepsProvider(
       register: [
         Dependency<AppLocalizations>.value(
-            AppLocalizations(mainPageGreeting: 'Hello world!')),
+            const AppLocalizations(mainPageGreeting: 'Hello world!')),
         Dependency<MainPageLocalizations>(
           create: (deps) => MainPageLocalizations(
             greeting: deps.get<AppLocalizations>().mainPageGreeting,
@@ -43,7 +43,7 @@ class MainApp extends StatelessWidget {
               onPressed: () {
                 context.deps.replace(
                   Dependency<AppLocalizations>.value(
-                    AppLocalizations(
+                    const AppLocalizations(
                         mainPageGreeting: 'Dla mnie się to podoba!'),
                   ),
                 );
