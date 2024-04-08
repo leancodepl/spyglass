@@ -40,13 +40,15 @@ class DepsProvider extends HookWidget {
     this.deps,
     this.register,
     this.introduceScope = true,
-    required this.child,
-  });
+    this.child,
+    this.builder,
+  }) : assert(child != null || builder != null);
 
   final Deps? deps;
   final Iterable<Dependency<Object>>? register;
   final bool introduceScope;
-  final Widget child;
+  final Widget? child;
+  final TransitionBuilder? builder;
 
   static Deps of(BuildContext context) {
     return InheritedModel.inheritFrom<_DepsInherited>(
@@ -121,7 +123,15 @@ class DepsProvider extends HookWidget {
     return _DepsInherited(
       deps: deps,
       snapshot: snapshot.value,
-      child: child,
+      child: Builder(
+        builder: (context) {
+          var result = child;
+          if (builder case final builder?) {
+            result = builder(context, result);
+          }
+          return result ?? const SizedBox();
+        },
+      ),
     );
   }
 }
