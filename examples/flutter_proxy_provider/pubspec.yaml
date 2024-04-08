@@ -1,0 +1,22 @@
+name: flutter_proxy_provider
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.3.2 <4.0.0"
+
+dependencies:
+  equatable: ^2.0.5
+  flutter:
+    sdk: flutter
+  flutter_spyglass:
+    path: ../../packages/flutter_spyglass
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

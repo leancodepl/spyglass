@@ -21,9 +21,7 @@ class MainApp extends StatelessWidget {
       'World',
     ];
     return DepsProvider(
-      register: (deps) {
-        deps.register(Dependency.value('Hello World!'));
-      },
+      register: [Dependency.value('Hello World!')],
       child: Builder(builder: (context) {
         return MaterialApp(
           home: Scaffold(
@@ -34,7 +32,7 @@ class MainApp extends StatelessWidget {
               onPressed: () {
                 final deps = DepsProvider.of(context);
                 final name = names[random.nextInt(names.length)];
-                deps.register(
+                deps.add(
                   Dependency.value('Hello $name!'),
                 );
               },

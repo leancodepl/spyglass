@@ -2,16 +2,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:spyglass/spyglass.dart';
 
-T? useDependency<T extends Object>([Object? key]) {
+T? useDependency<T extends Object>() {
   final context = useContext();
   final deps = DepsProvider.of(context);
-  return useStream(deps.watch<T>(key)).data;
+  return useStream(deps.watch<T>()).data;
 }
 
 void useRegisterDependency<T extends Object>({
   required Constructor<T> create,
   Disposer<T>? dispose,
-  Object? key,
   String? debugLabel,
 }) {
   final context = useContext();
@@ -20,94 +19,73 @@ void useRegisterDependency<T extends Object>({
     final dependency = Dependency<T>(
       create: create,
       dispose: dispose,
-      key: key,
       debugLabel: debugLabel,
     );
-    deps.register(dependency);
-    return () => deps.unregister(dependency.key);
+    deps.add(dependency);
+    return () => deps.remove(dependency.key);
   });
-}
-
-class DepsHook extends StatefulWidget {
-  const DepsHook({
-    super.key,
-    required this.register,
-    this.child,
-  });
-
-  final void Function(Deps deps) register;
-  final Widget? child;
-
-  @override
-  State<DepsHook> createState() => _DepsHookState();
-}
-
-class _DepsHookState extends State<DepsHook> {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final deps = DepsProvider.of(context);
-
-    widget.register(deps);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child ?? const SizedBox();
-  }
 }
 
 extension DepsContext on BuildContext {
   Deps get deps => DepsProvider.of(this);
 
-  T get<T extends Object>([Object? key]) => deps.get<T>(key);
-  T watch<T extends Object>([Object? key]) =>
-      DepsProvider.watch<T>(this, key: key);
+  T get<T extends Object>() => deps.get<T>();
+  T watch<T extends Object>() => DepsProvider.watch<T>(this);
 }
 
+/// Register on mount;  Unregister on unmount.
 class DepsProvider extends HookWidget {
   const DepsProvider({
     super.key,
     this.deps,
     this.register,
+    this.introduceScope = true,
     required this.child,
   });
 
   final Deps? deps;
-  final void Function(Deps deps)? register;
+  final Iterable<Dependency<Object>>? register;
+  final bool introduceScope;
   final Widget child;
-
-  static final _depsAspect = Object();
 
   static Deps of(BuildContext context) {
     return InheritedModel.inheritFrom<_DepsInherited>(
           context,
-          aspect: _depsAspect,
-        )?.scope ??
+        )?.deps ??
         globalDeps;
   }
 
-  static T watch<T extends Object>(BuildContext context, {Object? key}) {
-    final effectiveKey = DependencyKey<T>(key);
+  static T watch<T extends Object>(BuildContext context) {
     return InheritedModel.inheritFrom<_DepsInherited>(
       context,
-      aspect: effectiveKey,
+      aspect: T,
     )!
-        .scope
-        .get<T>(key);
+        .deps
+        .get<T>();
   }
 
   @override
   Widget build(BuildContext context) {
     final parentScope = of(context);
+    // 1. Use deps from props
+    // 2a. If should introduce new scope fork parent scope
+    // 2b. Otherwise use parent scope
     final deps = useMemoized(
-      () => this.deps ?? parentScope.fork(),
+      () => this.deps ?? (introduceScope ? parentScope.fork() : parentScope),
       [
         this.deps,
         parentScope,
       ],
     );
+    useEffect(() {
+      if (introduceScope && this.deps == null) {
+        return () {
+          deps.dispose();
+        };
+      }
+      return null;
+    }, [deps, introduceScope, this.deps]);
+
     final snapshot = useState<_DepsSnapshot?>(null);
 
     useEffect(() {
@@ -117,17 +95,34 @@ class DepsProvider extends HookWidget {
       return sub.cancel;
     }, [deps]);
 
-    Widget result = _DepsInherited(
-      scope: deps,
+    final registerCalled = useRef(false);
+    final register = this.register;
+
+    useEffect(() {
+      if (registerCalled.value || register == null) {
+        return null;
+      }
+
+      registerCalled.value = true;
+
+      for (final dep in register) {
+        deps.add(dep);
+      }
+
+      final keys = register.map((dep) => dep.key).toList();
+
+      return () {
+        for (final key in keys) {
+          deps.remove(key);
+        }
+      };
+    }, [deps, register]);
+
+    return _DepsInherited(
+      deps: deps,
       snapshot: snapshot.value,
       child: child,
     );
-
-    if (register != null) {
-      result = DepsHook(register: register!, child: result);
-    }
-
-    return result;
   }
 }
 
@@ -136,27 +131,28 @@ class _DepsSnapshot {
 
   factory _DepsSnapshot.of(Deps deps) {
     final values = {
-      for (final entry in deps.flattened().entries) entry.key: entry,
+      for (final scope in deps.scopeChain.toList().reversed)
+        for (final entry in scope.entries) entry.key: scope.peek(entry.key),
     };
     return _DepsSnapshot(values);
   }
 
-  final Map<Object, Dependency<Object>> values;
+  final Map<Object, Object?> values;
 }
 
 class _DepsInherited extends InheritedModel<Object> {
   const _DepsInherited({
     required super.child,
-    required this.scope,
+    required this.deps,
     required this.snapshot,
   });
 
-  final Deps scope;
+  final Deps deps;
   final _DepsSnapshot? snapshot;
 
   @override
   bool updateShouldNotify(_DepsInherited oldWidget) {
-    return scope != oldWidget.scope || snapshot != oldWidget.snapshot;
+    return deps != oldWidget.deps || snapshot != oldWidget.snapshot;
   }
 
   @override
@@ -164,14 +160,10 @@ class _DepsInherited extends InheritedModel<Object> {
     _DepsInherited oldWidget,
     Set<Object> dependencies,
   ) {
-    if (dependencies.length == 1 &&
-        dependencies.single == DepsProvider._depsAspect) {
-      return oldWidget.scope != scope;
+    if (dependencies.isEmpty) {
+      return oldWidget.deps != deps;
     }
     for (final key in dependencies) {
-      if (key == DepsProvider._depsAspect) {
-        continue;
-      }
       if (snapshot?.values[key] != oldWidget.snapshot?.values[key]) {
         return true;
       }

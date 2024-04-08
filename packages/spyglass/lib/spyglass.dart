@@ -1,3 +1,3 @@
 library;
 
-export 'src/deps.dart';
+export 'src/deps.dart' hide ManagedDependency;
