@@ -247,8 +247,20 @@ class Deps extends EventNotifier<DepsEvent> {
     return null;
   }
 
+  /// {@macro spyglass_deps_get}
+  ///
+  /// Alias for [get].
   T call<T extends Object>() => get<T>();
 
+  /// {@template spyglass_deps_get}
+  /// Returns the resolved value of the specified dependency. If the dependency
+  /// is not yet initialized, i.e. its [Dependency.create] method has not
+  /// resolved yet, this method will throw a [StateError].
+  ///
+  /// If the dependency is not registered, this method will throw
+  /// an [ArgumentError]. To see if a dependency is registered, use
+  /// [isRegistered].
+  /// {@endtemplate}
   T get<T extends Object>() {
     final dependency = _tryGetDependency<T>();
     if (dependency == null) {
@@ -261,6 +273,9 @@ class Deps extends EventNotifier<DepsEvent> {
     return value;
   }
 
+  /// Returns the dependency if it's already resolved, otherwise returns null.
+  /// If the dependency is not registered, throws an [ArgumentError].
+  /// To see if a dependency is registered, use [isRegistered].
   T? tryGet<T extends Object>() {
     final dependency = _tryGetDependency<T>();
     if (dependency == null) {
@@ -269,6 +284,12 @@ class Deps extends EventNotifier<DepsEvent> {
     return dependency.tryResolve();
   }
 
+  /// Returns a future that resolves when the specified dependency
+  /// is initialized. If the dependency hasn't been registered yet,
+  /// the future will still wait until it is.
+  ///
+  /// Note that this might be dangerous if the dependency is never registered.
+  /// In this case the future will never resolve.
   Future<T> getAsync<T extends Object>([DependencyKey? key]) async {
     return watch<T>(key).first;
   }
@@ -278,6 +299,12 @@ class Deps extends EventNotifier<DepsEvent> {
     return dependency?.tryResolve();
   }
 
+  /// Observe all changes to a dependency. For watching multiple dependencies
+  /// at once see extensions [watch2], [watch3] etc.
+  ///
+  /// Note that this stream only emits when a new instance is registered, so
+  /// if a dependency is a ChangeNotifier, Bloc, or similar, watch won't emit
+  /// when its internal state changes.
   Stream<T> watch<T extends Object>([DependencyKey? key]) async* {
     final effectiveKey = key ?? T;
     final value = _tryResolveValue<T>(key);
@@ -301,15 +328,38 @@ class Deps extends EventNotifier<DepsEvent> {
     }
   }
 
+  /// Returns a future that resolves when all the specified dependencies are
+  /// initialized and can be retrieved using synchronous [get]. Note that
+  /// this triggers the resolution of lazily initialized dependencies.
+  ///
+  /// This method is useful e.g. when you want to ensure certain services
+  /// are initialized before the application starts.
+  ///
+  ///
+  /// ```dart
+  /// Future<void> main() async {
+  ///   // register deps here
+  ///   deps.add(/* ... */);
+  ///   // ...
+  ///
+  ///   await deps.ensureResolved([ServiceA, ServiceB]);
+  ///
+  ///   runApp(MyApp());
+  /// }
+  /// ```
   Future<void> ensureResolved(Iterable<Type> types) async {
     await [
       for (final type in types) getAsync(type),
     ].wait;
   }
 
+  /// Dispose of the [Deps] instance and all dependencies it contains.
   @override
   Future<void> dispose() {
     _parentSubscription?.cancel();
+    for (final value in _values.values) {
+      unawaited(value.dispose());
+    }
     return super.dispose();
   }
 }
