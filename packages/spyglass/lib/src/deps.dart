@@ -1,5 +1,5 @@
-import 'dart:async';
 import 'dart:async' as async;
+import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
@@ -89,101 +89,6 @@ class Dependency<T extends Object> {
   // ignore: comment_references
   /// and [DepsProvider.register] from flutter_spyglass.
   ManagedDependency<T> _toManaged(Deps deps) => ManagedDependency(this, deps);
-}
-
-@internal
-class ManagedDependency<T extends Object> {
-  ManagedDependency(this.dependency, this.deps);
-
-  final Dependency<T> dependency;
-  final Deps deps;
-
-  DependencyKey get key => dependency.key;
-
-  final _controller = StreamController<T>.broadcast();
-  StreamSubscription<Object?>? _whenSubscription;
-  FutureOr<T>? _currentValue;
-  bool _debugCreateCalled = false;
-  bool _isDisposed = false;
-
-  // ignore: avoid_void_async
-  void _ensureInitialized() async {
-    if (_isDisposed) {
-      throw StateError('Dependency is disposed');
-    }
-    if (_currentValue != null) {
-      return;
-    }
-    if (_debugCreateCalled) {
-      throw StateError('Possibly encountered a cycle when creating dependency');
-    }
-    _debugCreateCalled = true;
-    _currentValue = dependency.create(deps);
-    _currentValue = await _currentValue!;
-    // reason: ManagedDependency and Deps work in tandem
-    // ignore: invalid_use_of_protected_member
-    deps.notify(DependencyChanged(key: key));
-
-    if ((dependency.when, dependency.update)
-        case (final when_?, final update?)) {
-      unawaited(_whenSubscription?.cancel());
-      _whenSubscription = when_(deps)
-          .map((_) => update(deps, _currentValue! as T))
-          .listen((newValue) {
-        if (newValue != _currentValue) {
-          _currentValue = newValue;
-          // reason: ManagedDependency and Deps work in tandem
-          // ignore: invalid_use_of_protected_member
-          deps.notify(DependencyChanged(key: key));
-        }
-      });
-    }
-  }
-
-  T resolve() {
-    _ensureInitialized();
-    return switch (_currentValue) {
-      final T value => value,
-      null => throw StateError('Initialization error. This is a bug.'),
-      Future<T>() => throw StateError('Value has not been resolved yet'),
-    };
-  }
-
-  T? tryResolve() {
-    _ensureInitialized();
-    return switch (_currentValue) {
-      final T value => value,
-      null => null,
-      Future<T>() => null,
-    };
-  }
-
-  Future<T> resolveAsync() async {
-    _ensureInitialized();
-    return switch (_currentValue) {
-      final FutureOr<T> value => value,
-      null => throw StateError('Initialization error. This is a bug.'),
-    };
-  }
-
-  Stream<T> watch() {
-    _ensureInitialized();
-    return _controller.stream;
-  }
-
-  Future<void> dispose() async {
-    if (_isDisposed) {
-      return;
-    }
-    _isDisposed = true;
-    await _whenSubscription?.cancel();
-    await _controller.close();
-    if ((dependency.dispose, _currentValue)
-        case (final dispose?, final value?)) {
-      final resolvedValue = await value;
-      await dispose(resolvedValue);
-    }
-  }
 }
 
 class Deps extends EventNotifier<DepsEvent> {
@@ -364,8 +269,8 @@ class Deps extends EventNotifier<DepsEvent> {
     return dependency.tryResolve();
   }
 
-  Future<T> getAsync<T extends Object>() async {
-    return watch<T>().first;
+  Future<T> getAsync<T extends Object>([DependencyKey? key]) async {
+    return watch<T>(key).first;
   }
 
   T? _tryResolveValue<T extends Object>([DependencyKey? key]) {
@@ -394,6 +299,12 @@ class Deps extends EventNotifier<DepsEvent> {
         }
       }
     }
+  }
+
+  Future<void> ensureResolved(Iterable<Type> types) async {
+    await [
+      for (final type in types) getAsync(type),
+    ].wait;
   }
 
   @override
@@ -428,4 +339,100 @@ extension DepsWatchMany on Deps {
           list[4] as E
         ),
       );
+}
+
+@internal
+class ManagedDependency<T extends Object> {
+  ManagedDependency(this.dependency, this.deps);
+
+  final Dependency<T> dependency;
+  final Deps deps;
+
+  DependencyKey get key => dependency.key;
+
+  final _controller = StreamController<T>.broadcast();
+  StreamSubscription<Object?>? _whenSubscription;
+  FutureOr<T>? _currentValue;
+  bool _debugCreateCalled = false;
+  bool _isDisposed = false;
+
+  void _ensureInitialized() {
+    if (_isDisposed) {
+      throw StateError('Dependency is disposed');
+    }
+    if (_currentValue != null) {
+      return;
+    }
+    if (_debugCreateCalled) {
+      throw StateError('Possibly encountered a cycle when creating dependency');
+    }
+    _debugCreateCalled = true;
+    _currentValue = dependency.create(deps);
+    Future.sync(() async {
+      _currentValue = await _currentValue!;
+      // reason: ManagedDependency and Deps work in tandem
+      // ignore: invalid_use_of_protected_member
+      deps.notify(DependencyChanged(key: key));
+
+      if ((dependency.when, dependency.update)
+          case (final when_?, final update?)) {
+        unawaited(_whenSubscription?.cancel());
+        _whenSubscription = when_(deps)
+            .map((_) => update(deps, _currentValue! as T))
+            .listen((newValue) {
+          if (newValue != _currentValue) {
+            _currentValue = newValue;
+            // reason: ManagedDependency and Deps work in tandem
+            // ignore: invalid_use_of_protected_member
+            deps.notify(DependencyChanged(key: key));
+          }
+        });
+      }
+    });
+  }
+
+  T resolve() {
+    _ensureInitialized();
+    return switch (_currentValue) {
+      final T value => value,
+      null => throw StateError('Initialization error. This is a bug.'),
+      Future<T>() => throw StateError('Value has not been resolved yet'),
+    };
+  }
+
+  T? tryResolve() {
+    _ensureInitialized();
+    return switch (_currentValue) {
+      final T value => value,
+      null => null,
+      Future<T>() => null,
+    };
+  }
+
+  Future<T> resolveAsync() async {
+    _ensureInitialized();
+    return switch (_currentValue) {
+      final FutureOr<T> value => value,
+      null => throw StateError('Initialization error. This is a bug.'),
+    };
+  }
+
+  Stream<T> watch() {
+    _ensureInitialized();
+    return _controller.stream;
+  }
+
+  Future<void> dispose() async {
+    if (_isDisposed) {
+      return;
+    }
+    _isDisposed = true;
+    await _whenSubscription?.cancel();
+    await _controller.close();
+    if ((dependency.dispose, _currentValue)
+        case (final dispose?, final value?)) {
+      final resolvedValue = await value;
+      await dispose(resolvedValue);
+    }
+  }
 }
