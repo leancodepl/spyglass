@@ -21,7 +21,9 @@ class MainApp extends StatelessWidget {
       'World',
     ];
     return DepsProvider(
-      register: [Dependency.value('Hello World!')],
+      register: [
+        Dependency.value('Hello World!'),
+      ],
       child: Builder(builder: (context) {
         return MaterialApp(
           home: Scaffold(
