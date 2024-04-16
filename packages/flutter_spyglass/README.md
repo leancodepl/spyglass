@@ -1,39 +1,37 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Spyglass for Flutter [WIP]
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages).
+> Note: This package is in active development and its API might change
+> frequently. Currently it's basically functional but might contain frequent
+> bugs. It has not yet been thoroughly tested and is missing documentation and
+> examples.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages).
--->
+Reliable service locator for all your Flutter needs.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+## Installation & usage
 
-## Features
+Add the latest `flutter_spyglass` to your pubspec and you're ready to go!
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
-```dart
-const like = 'sample';
+```sh
+flutter pub add flutter_spyglass
 ```
 
-## Additional information
+Basic usage:
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```dart
+// Wrap a widget in DepsProvider and read value from context.
+// All dependencies in [DepsProvider.register] will be disposed of
+// when DepsProvider is disposed
+DepsProvider(
+  register: [
+    Dependency<Greeter>(
+      create: (deps) => Greeter(),
+      dispose: (greeter) => greeter.dispose(),
+    ),
+  ],
+  builder: (context, child) => Center(
+    child: Text(context.watch<Greeter>().message),
+  ),
+);
+```
+
+For more advanced usage of the `Deps` container/scope see docs for `spyglass`.
