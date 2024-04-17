@@ -1,7 +1,8 @@
 name: flutter_spyglass
-description: "A new Flutter package project."
+description: "Reliable service locator for Flutter."
 version: 0.0.1
-homepage:
+repository: https://github.com/leancodepl/spyglass/tree/main/packages/flutter_spyglass
+homepage: https://github.com/leancodepl/spyglass
 
 environment:
   sdk: ">=3.3.1 <4.0.0"
@@ -11,11 +12,10 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_hooks: ^0.20.5
-  spyglass:
-    path: ../spyglass
+  spyglass: ^0.0.1
 
 dev_dependencies:
+  flutter_lints: ^3.0.0
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
   leancode_lint: ^12.0.0

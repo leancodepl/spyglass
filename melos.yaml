@@ -1,0 +1,4 @@
+name: spyglass_workspace
+
+packages:
+  - packages/*
