@@ -2,16 +2,20 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:spyglass/spyglass.dart';
 
+/// Obtain the nearest [Deps] scope.
 Deps useDeps() {
   return DepsProvider.of(useContext());
 }
 
+/// Watch the specified dependency.
 T useDependency<T extends Object>() {
   final context = useContext();
   final deps = DepsProvider.of(context);
   return useStream(deps.watch<T>(), initialData: deps.get<T>()).requireData;
 }
 
+/// Register dependencies on mount; Unregister on unmount. What [DepsProvider]
+/// does with its [DepsProvider.register] prop but in a hook form.
 void useRegisterDeps(
   List<Dependency<Object>> dependencies, [
   List<Object?> keys = const [],
@@ -27,10 +31,15 @@ void useRegisterDeps(
   );
 }
 
+/// Shortcuts for obtaining Deps values from BuildContext.
 extension DepsContext on BuildContext {
+  /// Obtain the nearest [Deps] scope.
   Deps get deps => DepsProvider.of(this);
 
+  /// Read the value of a dependency without listening to changes.
   T get<T extends Object>() => deps.get<T>();
+
+  /// Watch the value of a dependency and rebuild the widget when it changes.
   T watch<T extends Object>() => DepsProvider.watch<T>(this);
 }
 
@@ -45,12 +54,28 @@ class DepsProvider extends HookWidget {
     this.builder,
   }) : assert(child != null || builder != null);
 
+  /// Provide a custom [Deps] instance that dependencies listed in [register]
+  /// should be added to. This will also influence the provided scope to the
+  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch].
   final Deps? deps;
+
+  /// A list of dependencies to register on mount and unregister on unmount.
+  /// These dependencies will be bound to this widget, effectively.
   final Iterable<Dependency<Object>>? register;
+
+  /// By default [DepsProvider] introduces a new scope. Set this to `false` to
+  /// just register new dependencies in [register].
   final bool introduceScope;
+
+  /// The widget below this widget in the tree. Use [builder] alternatively.
+  /// If you're going to read the deps in the child widget, you should use
+  /// [builder] or [Builder] instead to avoid reading stale context.
   final Widget? child;
+
+  /// Alternative to [child]. A function that builds the child widget.
   final TransitionBuilder? builder;
 
+  /// Obtain the nearest [Deps] scope.
   static Deps of(BuildContext context) {
     return InheritedModel.inheritFrom<_DepsInherited>(
           context,
@@ -58,6 +83,11 @@ class DepsProvider extends HookWidget {
         globalDeps;
   }
 
+  /// Observe the value of a dependency specified by [T].
+  ///
+  /// Note: Current implementation using InheritedModel/InheritedWidget
+  /// might be prone to performance issues. This API might change in the future
+  /// in favor of hooks.
   static T watch<T extends Object>(BuildContext context) {
     return InheritedModel.inheritFrom<_DepsInherited>(
       context,

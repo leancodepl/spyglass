@@ -14,35 +14,44 @@ Deps get deps => globalDeps;
 
 typedef DependencyKey = Type;
 
-typedef Constructor<T> = FutureOr<T> Function(Deps deps);
-typedef Watcher = Stream<Object> Function(Deps deps);
-typedef Disposer<T> = FutureOr<void> Function(T object);
+/// Callback to unregister a dependency. It will be disposed of automatically.
 typedef Unregister = void Function();
 
+/// Event emitted by [Deps] when a dependency is registered, unregistered,
+/// or changed.
 sealed class DepsEvent {}
 
+/// Event emitted by [Deps] when a dependency is registered. It does not mean
+/// its value can be read by [Deps.get] if the dependency is asynchronous.
+/// When an async dependency is resolved it will be followed by
+/// a [DependencyChanged] event.
 final class DependencyRegistered extends Equatable implements DepsEvent {
   const DependencyRegistered({
     required this.key,
   });
 
+  /// The key of the dependency that was registered.
   final DependencyKey key;
 
   @override
   List<Object?> get props => [key];
 }
 
+/// Event emitted by [Deps] when a dependency is unregistered.
 final class DependencyUnregistered extends Equatable implements DepsEvent {
   const DependencyUnregistered({
     required this.key,
   });
 
+  /// The key of the dependency that was unregistered.
   final DependencyKey key;
 
   @override
   List<Object?> get props => [key];
 }
 
+/// Event emitted by [Deps] when a dependency value is changed, i.e.
+/// as a result of the [Dependency.create] or [Dependency.update] callback.
 final class DependencyChanged extends Equatable implements DepsEvent {
   const DependencyChanged({
     required this.key,
@@ -54,15 +63,12 @@ final class DependencyChanged extends Equatable implements DepsEvent {
   List<Object?> get props => [key];
 }
 
-enum DependencyState {
-  initial,
-  resolving,
-  resolved,
-  disposing,
-  disposed,
-}
-
+/// An immutable object describing a dependency. It can be registered in [Deps]
+/// by using [Deps.add].
+@immutable
 class Dependency<T extends Object> {
+  /// An immutable object describing a dependency. It can be registered in [Deps]
+  /// by using [Deps.add].
   const Dependency({
     required this.create,
     this.update,
@@ -74,13 +80,35 @@ class Dependency<T extends Object> {
           'when must be provided if update is provided',
         );
 
+  /// An immutable object describing a dependency. It can be registered in [Deps]
+  /// by using [Deps.add].
+  ///
+  /// This is a shorthand for creating a dependency that doesn't change
+  /// over time and does not need to be lazily created.
   factory Dependency.value(T value) => Dependency(create: (_) => value);
 
+  /// The key or type of the dependency. It is a unique identifier for the
+  /// dependency in its [Deps].
   DependencyKey get key => T;
+
+  /// Creates a new instance of [T]. You can use provided [Deps] to obtain
+  /// required dependencies. This callback can be asynchronous to perform
+  /// long running initialization or await another dependency.
   final FutureOr<T> Function(Deps deps) create;
+
+  /// Updates or creates a new instance of the dependency in reaction to
+  /// changes in other dependencies specified by [when].
   final T Function(Deps deps, T oldValue)? update;
+
+  /// Use one of [Deps.watch], [DepsWatchMany.watch2] etc. to specify which
+  /// changes you want to observe.
   final Stream<Object?> Function(Deps deps)? when;
+
+  /// Perform actions to clean up after the object is no longer needed.
+
   final FutureOr<void> Function(T value)? dispose;
+
+  /// A debug label to help identify the dependency in logs.
   final String? debugLabel;
 
   /// NOTE
@@ -89,8 +117,17 @@ class Dependency<T extends Object> {
   // ignore: comment_references
   /// and [DepsProvider.register] from flutter_spyglass.
   ManagedDependency<T> _toManaged(Deps deps) => ManagedDependency(this, deps);
+
+  @override
+  String toString() {
+    return 'Dependency<$T>($debugLabel)';
+  }
 }
 
+/// A box that contains dependencies. Deps can also form a tree-like hierarchy
+/// to allow for scoping and overriding dependencies. Reading values from
+/// a deps object that it doesn't contain but its ancestors will return
+/// the value from the nearest ancestor.
 class Deps extends EventNotifier<DepsEvent> {
   /// Returns the current global [Deps] instance. See also [globalDeps].
   factory Deps() => globalDeps;
@@ -189,6 +226,8 @@ class Deps extends EventNotifier<DepsEvent> {
     return () => remove(managed.key);
   }
 
+  /// Helper method for adding multiple dependencies at once if you find
+  /// calling `deps..add()..add()...` too verbose.
   Unregister addMany(Iterable<Dependency<Object>> dependencies) {
     final unregisters = <Unregister>[];
     for (final dependency in dependencies) {
@@ -228,12 +267,16 @@ class Deps extends EventNotifier<DepsEvent> {
     return scopeChain.any((scope) => scope._values.containsKey(effectiveKey));
   }
 
+  /// Unlike [isRegistered] this method only checks if the dependency is
+  /// registered in this [Deps] instance, not its ancestors.
   bool _isRegisteredHere<T>([DependencyKey? key]) {
     final effectiveKey = key ?? T;
 
     return _values.containsKey(effectiveKey);
   }
 
+  /// Helper method for obtaining a [ManagedDependency] instance backing
+  /// the dependency of the specified type.
   ManagedDependency<T>? _tryGetDependency<T extends Object>([
     DependencyKey? key,
   ]) {
@@ -391,6 +434,9 @@ extension DepsWatchMany on Deps {
       );
 }
 
+/// This class helps manage lifecycle of a single dependency. It is tightly
+/// coupled with [Deps]. It's an internal structure and it should never be
+/// exposed as part of the public API.
 @internal
 class ManagedDependency<T extends Object> {
   ManagedDependency(this.dependency, this.deps);
