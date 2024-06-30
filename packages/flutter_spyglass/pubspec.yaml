@@ -1,6 +1,6 @@
 name: flutter_spyglass
 description: "Reliable service locator for Flutter."
-version: 0.0.2
+version: 0.0.3
 repository: https://github.com/leancodepl/spyglass/tree/main/packages/flutter_spyglass
 homepage: https://github.com/leancodepl/spyglass
 
