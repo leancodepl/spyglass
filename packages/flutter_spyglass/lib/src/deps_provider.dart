@@ -132,22 +132,19 @@ class DepsProvider extends HookWidget {
       [deps],
     );
 
-    final registerCalled = useRef(false);
     final register = this.register;
 
     useEffect(
       () {
-        if (registerCalled.value || register == null) {
+        if (register == null) {
           return null;
         }
-
-        registerCalled.value = true;
 
         final unregister = deps.addMany(register);
 
         return unregister;
       },
-      [deps, register?.map((e) => e.key).toList()],
+      [deps, ...?register?.map((e) => e.key)],
     );
 
     return _DepsInherited(
