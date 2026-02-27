@@ -4,17 +4,19 @@ version: 0.0.3
 repository: https://github.com/leancodepl/spyglass/tree/main/packages/flutter_spyglass
 homepage: https://github.com/leancodepl/spyglass
 
+resolution: workspace
+
 environment:
-  sdk: ">=3.3.1 <4.0.0"
-  flutter: ">=1.17.0"
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_hooks: ^0.20.5
+  flutter_hooks: ^0.21.3+1
   spyglass: ^0.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  leancode_lint: ^12.0.0
+  leancode_lint: ^19.0.1

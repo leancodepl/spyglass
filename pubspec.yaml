@@ -1,7 +1,14 @@
 name: spyglass_workspace
 
 environment:
-  sdk: "^3.2.0"
+  sdk: "^3.11.0"
 
 dev_dependencies:
-  melos: 5.1.0
+  melos: 7.4.0
+
+workspace:
+  - packages/spyglass
+  - packages/flutter_spyglass
+  - examples/*
+
+melos:

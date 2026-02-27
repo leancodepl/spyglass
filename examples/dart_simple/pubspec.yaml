@@ -2,9 +2,12 @@ name: dart_simple
 description: A sample command-line application with basic argument parsing.
 version: 0.0.1
 # repository: https://github.com/my_org/my_repo
+publish_to: none
+
+resolution: workspace
 
 environment:
-  sdk: ^3.3.2
+  sdk: ^3.6.0
 
 # Add regular dependencies here.
 dependencies:

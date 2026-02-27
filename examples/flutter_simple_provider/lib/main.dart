@@ -22,13 +22,13 @@ class MainApp extends StatelessWidget {
     ];
     return DepsProvider(
       register: [
-        Dependency.value('Hello World!'),
+        Dependency<String>.value('Hello World!'),
       ],
       child: Builder(builder: (context) {
         return MaterialApp(
           home: Scaffold(
             body: Center(
-              child: Text(context.watch<String>()),
+              child: Text(context.watch<String>() ?? 'placeholder'),
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
