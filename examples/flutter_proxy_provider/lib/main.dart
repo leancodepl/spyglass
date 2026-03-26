@@ -19,7 +19,7 @@ class MainApp extends StatelessWidget {
           create: (deps) => MainPageLocalizations(
             greeting: deps.get<AppLocalizations>().mainPageGreeting,
           ),
-          when: (deps) => deps.watch<AppLocalizations>(),
+          observe: const [AppLocalizations],
           update: (deps, oldValue) => MainPageLocalizations(
             greeting: deps.get<AppLocalizations>().mainPageGreeting,
           ),
@@ -31,7 +31,7 @@ class MainApp extends StatelessWidget {
             child: Builder(
               builder: (context) {
                 final greeting =
-                    context.watch<MainPageLocalizations>().greeting;
+                    context.observe<MainPageLocalizations>().greeting;
 
                 return Text(greeting);
               },

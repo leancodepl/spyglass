@@ -71,12 +71,14 @@ class Dependency<T extends Object> {
   /// by using [Deps.add].
   const Dependency({
     required this.create,
+    this.lazy = true,
+    this.observe,
     this.update,
-    this.when,
     this.dispose,
+    this.tags,
     this.debugLabel,
   }) : assert(
-          when != null || update == null,
+          observe != null || update == null,
           'when must be provided if update is provided',
         );
 
@@ -85,27 +87,42 @@ class Dependency<T extends Object> {
   ///
   /// This is a shorthand for creating a dependency that doesn't change
   /// over time and does not need to be lazily created.
-  factory Dependency.value(T value) => Dependency(create: (_) => value);
+  Dependency.value(T value, {this.tags, this.dispose, this.debugLabel})
+      : create = ((_) => value),
+        lazy = false,
+        observe = null,
+        update = null;
 
   /// The key or type of the dependency. It is a unique identifier for the
   /// dependency in its [Deps].
   DependencyKey get key => T;
+
+  /// Tags can be used to categorize dependencies and perform operations on them.
+  /// For example, you can use a 'startup' tag to mark dependencies that need to be
+  /// initialized before the application starts. Then, use [Deps.ensureResolved] to
+  /// wait for them to be resolved before proceeding.
+  final List<Object>? tags;
 
   /// Creates a new instance of [T]. You can use provided [Deps] to obtain
   /// required dependencies. This callback can be asynchronous to perform
   /// long running initialization or await another dependency.
   final FutureOr<T> Function(Deps deps) create;
 
+  /// Lazy dependencies are not resolved until they are explicitly requested
+  /// using [Deps.get], [Deps.getAsync] or [Deps.observe].
+  final bool lazy;
+
   /// Updates or creates a new instance of the dependency in reaction to
-  /// changes in other dependencies specified by [when].
+  /// changes in other dependencies specified by [observe].
+  // ignore: unsafe_variance
   final T Function(Deps deps, T oldValue)? update;
 
-  /// Use one of [Deps.watch], [DepsWatchMany.watch2] etc. to specify which
+  /// Use one of [Deps.observe], [DepsObserveMany.observe2] etc. to specify which
   /// changes you want to observe.
-  final Stream<Object?> Function(Deps deps)? when;
+  final List<DependencyKey>? observe;
 
   /// Perform actions to clean up after the object is no longer needed.
-
+  // ignore: unsafe_variance, avoid_futureor_void
   final FutureOr<void> Function(T value)? dispose;
 
   /// A debug label to help identify the dependency in logs.
@@ -207,6 +224,9 @@ class Deps extends EventNotifier<DepsEvent> {
 
   Iterable<Dependency<Object>> get ownEntries =>
       _values.values.map((e) => e.dependency);
+
+  Iterable<Dependency<Object>> getEntriesWithTag(Object tag) =>
+      getAllEntries().where((e) => e.tags?.contains(tag) ?? false);
 
   /// Peek at the value of a dependency without resolving it.
   T? peek<T extends Object>([DependencyKey? key]) =>
@@ -333,8 +353,8 @@ class Deps extends EventNotifier<DepsEvent> {
   ///
   /// Note that this might be dangerous if the dependency is never registered.
   /// In this case the future will never resolve.
-  Future<T> getAsync<T extends Object>([DependencyKey? key]) async {
-    return watch<T>(key).first;
+  Future<T> getAsync<T extends Object>([DependencyKey? key]) {
+    return observe<T>(key).first;
   }
 
   T? _tryResolveValue<T extends Object>([DependencyKey? key]) {
@@ -343,12 +363,12 @@ class Deps extends EventNotifier<DepsEvent> {
   }
 
   /// Observe all changes to a dependency. For watching multiple dependencies
-  /// at once see extensions [watch2], [watch3] etc.
+  /// at once see extensions [observe2], [observe3] etc.
   ///
   /// Note that this stream only emits when a new instance is registered, so
-  /// if a dependency is a ChangeNotifier, Bloc, or similar, watch won't emit
+  /// if a dependency is a ChangeNotifier, Bloc, or similar, observe won't emit
   /// when its internal state changes.
-  Stream<T> watch<T extends Object>([DependencyKey? key]) async* {
+  Stream<T> observe<T extends Object>([DependencyKey? key]) async* {
     final effectiveKey = key ?? T;
     final value = _tryResolveValue<T>(key);
     if (value != null) {
@@ -407,23 +427,23 @@ class Deps extends EventNotifier<DepsEvent> {
   }
 }
 
-extension DepsWatchMany on Deps {
-  Stream<List<Object>> watchMany(List<Type> types) => Rx.combineLatest(
-        types.map(watch),
+extension DepsObserveMany on Deps {
+  Stream<List<Object>> observeMany(List<Type> types) => Rx.combineLatest(
+        types.map(observe),
         (values) => values,
       );
 
-  Stream<(A, B)> watch2<A, B>() =>
-      watchMany([A, B]).map((list) => (list[0] as A, list[1] as B));
+  Stream<(A, B)> observe2<A, B>() =>
+      observeMany([A, B]).map((list) => (list[0] as A, list[1] as B));
 
-  Stream<(A, B, C)> watch3<A, B, C>() => watchMany([A, B, C])
+  Stream<(A, B, C)> observe3<A, B, C>() => observeMany([A, B, C])
       .map((list) => (list[0] as A, list[1] as B, list[2] as C));
 
-  Stream<(A, B, C, D)> watch4<A, B, C, D>() => watchMany([A, B, C, D])
+  Stream<(A, B, C, D)> observe4<A, B, C, D>() => observeMany([A, B, C, D])
       .map((list) => (list[0] as A, list[1] as B, list[2] as C, list[3] as D));
 
-  Stream<(A, B, C, D, E)> watch5<A, B, C, D, E>() =>
-      watchMany([A, B, C, D, E]).map(
+  Stream<(A, B, C, D, E)> observe5<A, B, C, D, E>() =>
+      observeMany([A, B, C, D, E]).map(
         (list) => (
           list[0] as A,
           list[1] as B,
@@ -439,7 +459,11 @@ extension DepsWatchMany on Deps {
 /// exposed as part of the public API.
 @internal
 class ManagedDependency<T extends Object> {
-  ManagedDependency(this.dependency, this.deps);
+  ManagedDependency(this.dependency, this.deps) {
+    if (!dependency.lazy) {
+      _ensureInitialized();
+    }
+  }
 
   final Dependency<T> dependency;
   final Deps deps;
@@ -447,7 +471,7 @@ class ManagedDependency<T extends Object> {
   DependencyKey get key => dependency.key;
 
   final _controller = StreamController<T>.broadcast();
-  StreamSubscription<Object?>? _whenSubscription;
+  StreamSubscription<void>? _observeSubscription;
   FutureOr<T>? _currentValue;
   bool _debugCreateCalled = false;
   bool _isDisposed = false;
@@ -470,12 +494,16 @@ class ManagedDependency<T extends Object> {
       // ignore: invalid_use_of_protected_member
       deps.notify(DependencyChanged(key: key));
 
-      if ((dependency.when, dependency.update)
-          case (final when_?, final update?)) {
-        unawaited(_whenSubscription?.cancel());
-        _whenSubscription = when_(deps)
+      if ((dependency.observe, dependency.update)
+          case (final observe?, final update?)) {
+        unawaited(_observeSubscription?.cancel());
+        _observeSubscription = deps
+            .observeMany(observe)
             .map((_) => update(deps, _currentValue! as T))
             .listen((newValue) {
+          if (_isDisposed) {
+            return;
+          }
           if (newValue != _currentValue) {
             _currentValue = newValue;
             // reason: ManagedDependency and Deps work in tandem
@@ -523,7 +551,7 @@ class ManagedDependency<T extends Object> {
       return;
     }
     _isDisposed = true;
-    await _whenSubscription?.cancel();
+    await _observeSubscription?.cancel();
     await _controller.close();
     if ((dependency.dispose, _currentValue)
         case (final dispose?, final value?)) {

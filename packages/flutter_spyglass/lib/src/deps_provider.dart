@@ -13,7 +13,7 @@ Deps useDeps() {
 T useDependency<T extends Object>() {
   final deps = useDeps();
 
-  return useStream(deps.watch<T>(), initialData: deps.get<T>()).requireData;
+  return useStream(deps.observe<T>(), initialData: deps.get<T>()).requireData;
 }
 
 /// Register dependencies on mount; Unregister on unmount. What [DepsProvider]
@@ -42,9 +42,9 @@ extension DepsContext on BuildContext {
   T get<T extends Object>() => deps.get<T>();
 
   /// Watch the value of a dependency and rebuild the widget when it changes.
-  T watch<T extends Object>() => DepsProvider.watch<T>(this);
+  T observe<T extends Object>() => DepsProvider.observe<T>(this);
 
-  T? maybeWatch<T extends Object>() => DepsProvider.maybeWatch<T>(this);
+  T? maybeObserve<T extends Object>() => DepsProvider.maybeObserve<T>(this);
 }
 
 /// Register on mount;  Unregister on unmount.
@@ -60,7 +60,7 @@ class DepsProvider extends HookWidget {
 
   /// Provide a custom [Deps] instance that dependencies listed in [register]
   /// should be added to. This will also influence the provided scope to the
-  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch].
+  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.observe].
   final Deps? deps;
 
   /// A list of dependencies to register on mount and unregister on unmount.
@@ -86,14 +86,14 @@ class DepsProvider extends HookWidget {
   }
 
   /// Observe the value of a dependency specified by [T].
-  static T watch<T extends Object>(BuildContext context) {
+  static T observe<T extends Object>(BuildContext context) {
     return context
         .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: T)!
         .deps
         .get<T>();
   }
 
-  static T? maybeWatch<T extends Object>(BuildContext context) {
+  static T? maybeObserve<T extends Object>(BuildContext context) {
     final deps = context
         .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: T)!
         .deps;
@@ -189,7 +189,7 @@ class _DepsElement extends InheritedElement {
     if (widget.deps != oldWidget.deps) {
       for (final MapEntry(:key, value: sub) in _subscriptions.entries) {
         sub.cancel();
-        _subscriptions[key] = widget.deps.watch(key.$2).listen((e) {
+        _subscriptions[key] = widget.deps.observe(key.$2).listen((e) {
           key.$1.didChangeDependencies();
         });
       }
@@ -211,7 +211,7 @@ class _DepsElement extends InheritedElement {
       throw ArgumentError.value(value, 'value', 'value must be a Type');
     }
     _subscriptions[(dependent, value)]?.cancel();
-    _subscriptions[(dependent, value)] = widget.deps.watch(value).listen((e) {
+    _subscriptions[(dependent, value)] = widget.deps.observe(value).listen((e) {
       dependent.markNeedsBuild();
     });
   }

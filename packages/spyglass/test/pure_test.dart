@@ -2,7 +2,7 @@ import 'package:spyglass/spyglass.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('pure', () async {
+  test('pure', () {
     globalDeps.add(
       Dependency(
         create: (deps) async {
@@ -27,13 +27,13 @@ void main() {
     expect(() => deps.get<Foo>(), returnsNormally);
   });
 
-  test('watch mutable', () async {
+  test('observe mutable', () async {
     deps
       ..add(Dependency(create: (deps) => Baz(label: 'first')))
       ..add(
         Dependency(
           create: (deps) => Qux(baz: deps.get()),
-          when: (deps) => deps.watch<Baz>(),
+          observe: const [Baz],
           update: (deps, oldValue) => oldValue..baz = deps.get(),
         ),
       );
@@ -45,13 +45,13 @@ void main() {
     expect(deps.get<Qux>().label, equals('second'));
   });
 
-  test('watch immutable', () async {
+  test('observe immutable', () async {
     deps
       ..add(Dependency(create: (deps) => Baz(label: 'first')))
       ..add(
         Dependency(
           create: (deps) => Qux(baz: deps.get()),
-          when: (deps) => deps.watch<Baz>(),
+          observe: const [Baz],
           update: (deps, oldValue) => Qux(baz: deps.get()),
         ),
       );
@@ -61,6 +61,25 @@ void main() {
     deps.add(Dependency.value(Baz(label: 'second')));
 
     expect(deps.get<Qux>().label, equals('second'));
+  });
+
+  test('eager resolves to expected value', () {
+    deps.add(Dependency(lazy: false, create: (deps) => Bar()));
+
+    expect(deps.get<Bar>(), isA<Bar>());
+  });
+
+  test('eager with unresolved dependency throws when adding', () {
+    deps.add(Dependency(create: (deps) async {
+      await Future<void>.delayed(const Duration(seconds: 1));
+      return Bar();
+    }));
+
+    expect(
+      () => deps
+          .add(Dependency(lazy: false, create: (deps) => Foo(bar: deps.get()))),
+      throwsStateError,
+    );
   });
 }
 

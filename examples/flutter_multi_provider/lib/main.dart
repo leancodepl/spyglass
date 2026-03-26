@@ -28,7 +28,7 @@ class MainApp extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   BlocBuilder<DataCubit, DataCubitState>(
-                    bloc: context.watch(),
+                    bloc: context.observe(),
                     builder: (context, state) {
                       final stateDescription = switch (state.connectionState) {
                         ConnectionState.none => 'Idle',

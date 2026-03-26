@@ -28,7 +28,7 @@ class MainApp extends StatelessWidget {
         return MaterialApp(
           home: Scaffold(
             body: Center(
-              child: Text(context.watch<String>() ?? 'placeholder'),
+              child: Text(context.observe<String>()),
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
