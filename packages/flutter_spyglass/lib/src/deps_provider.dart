@@ -81,7 +81,7 @@ class DepsProvider extends HookWidget {
 
   /// Obtain the nearest [Deps] scope.
   static Deps of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_DepsInherited>()?.deps ??
+    return context.getInheritedWidgetOfExactType<_DepsInherited>()?.deps ??
         globalDeps;
   }
 
