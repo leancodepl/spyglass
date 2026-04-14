@@ -442,6 +442,20 @@ class Deps extends EventNotifier<DepsEvent> {
     ].wait;
   }
 
+  Future<void> ensureAllEagerResolved() async {
+    final eagerValues =
+        _values.values.where((v) => !v.dependency.lazy).toList();
+
+    await Future.wait([
+      for (final value in eagerValues.where((v) => v.dependency.isAsync))
+        value.resolveAsync(),
+    ]);
+
+    for (final value in eagerValues.where((v) => !v.dependency.isAsync)) {
+      value.resolve();
+    }
+  }
+
   /// Dispose of the [Deps] instance and all dependencies it contains.
   @override
   Future<void> dispose() {
@@ -485,11 +499,7 @@ extension DepsObserveMany on Deps {
 /// exposed as part of the public API.
 @internal
 class ManagedDependency<T extends Object> {
-  ManagedDependency(this.dependency, this.deps) {
-    if (!dependency.lazy) {
-      _ensureInitialized();
-    }
-  }
+  ManagedDependency(this.dependency, this.deps);
 
   final Dependency<T> dependency;
   final Deps deps;

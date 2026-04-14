@@ -136,6 +136,7 @@ class DepsProvider extends HookWidget {
         }
 
         final unregister = deps.addMany(register);
+        deps.ensureAllEagerResolved();
 
         return unregister;
       },
