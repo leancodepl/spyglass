@@ -7,13 +7,13 @@ Future<void> main() async {
   final sw = Stopwatch()..start();
 
   deps.addMany([
-    Dependency<UsernameProvider>(
+    Dependency<UsernameProvider>.async(
       create: (deps) async {
         await Future<void>.delayed(const Duration(seconds: 3));
         return UsernameProvider();
       },
     ),
-    Dependency<Greeter>(
+    Dependency<Greeter>.async(
       create: (deps) async {
         final usernameProvider = await deps.getAsync<UsernameProvider>();
         final username = await usernameProvider.getUsername();
