@@ -7,21 +7,21 @@ Future<void> main() async {
   final sw = Stopwatch()..start();
 
   deps.addMany([
-    Dependency<ServiceA>(
+    Dependency<ServiceA>.async(
       create: (deps) async {
         final service = ServiceA();
         await service.init();
         return service;
       },
     ),
-    Dependency<ServiceB>(
+    Dependency<ServiceB>.async(
       create: (deps) async {
         final service = ServiceB();
         await service.init();
         return service;
       },
     ),
-    Dependency<ServiceC>(
+    Dependency<ServiceC>.async(
       create: (deps) async {
         final service = ServiceC();
         await service.init();
