@@ -70,33 +70,16 @@ class Dependency<T extends Object> {
   /// An immutable object describing a dependency. It can be registered in [Deps]
   /// by using [Deps.add].
   const Dependency({
-    this.create,
-    this.lazy = true,
+    required this.create,
     this.observe,
     this.update,
     this.dispose,
     this.tags,
     this.debugLabel,
-  })  : assert(
+  }) : assert(
           observe != null || update == null,
           'when must be provided if update is provided',
-        ),
-        createAsync = null;
-
-  const Dependency.async({
-    required Future<T> Function(Deps deps) create,
-    this.lazy = true,
-    this.observe,
-    this.update,
-    this.dispose,
-    this.tags,
-    this.debugLabel,
-  })  : assert(
-          observe != null || update == null,
-          'when must be provided if update is provided',
-        ),
-        createAsync = create,
-        create = null;
+        );
 
   /// An immutable object describing a dependency. It can be registered in [Deps]
   /// by using [Deps.add].
@@ -105,17 +88,12 @@ class Dependency<T extends Object> {
   /// over time and does not need to be lazily created.
   Dependency.value(T value, {this.tags, this.dispose, this.debugLabel})
       : create = ((_) => value),
-        createAsync = null,
-        lazy = false,
         observe = null,
         update = null;
 
   /// The key or type of the dependency. It is a unique identifier for the
   /// dependency in its [Deps].
   DependencyKey get key => T;
-
-  /// Whether the dependency requires asynchronous creation.
-  bool get isAsync => createAsync != null;
 
   /// Tags can be used to categorize dependencies and perform operations on them.
   /// For example, you can use a 'startup' tag to mark dependencies that need to be
@@ -124,19 +102,9 @@ class Dependency<T extends Object> {
   final List<Object>? tags;
 
   /// Creates a new instance of [T]. You can use provided [Deps] to obtain
-  /// required dependencies. [createAsync] callback should be used to perform
-  /// asynchronous, long running initialization or await another dependency.
-  final T Function(Deps deps)? create;
-
-  /// Creates a new instance of [T]. You can use provided [Deps] to obtain
-  /// required dependencies. [create] callback should be used if dependency
-  /// can be create synchronously.
-  final Future<T> Function(Deps deps)? createAsync;
-
-  /// Lazy dependencies are not resolved until they are explicitly requested
-  /// using [Deps.get], [Deps.getAsync] or [Deps.observe]. Eager dependencies
-  /// are resolved when ensureAllEagerResolved is called.
-  final bool lazy;
+  /// required dependencies. This callback can be asynchronous to perform
+  /// long running initialization or await another dependency.
+  final T Function(Deps deps) create;
 
   /// Updates or creates a new instance of the dependency in reaction to
   /// changes in other dependencies specified by [observe].
@@ -256,11 +224,7 @@ class Deps extends EventNotifier<DepsEvent> {
 
   /// Peek at the value of a dependency without resolving it.
   T? peek<T extends Object>([DependencyKey? key]) =>
-      switch (_tryGetDependency<T>(key)?._currentValue) {
-        null => null,
-        final T value => value,
-        Future<T> _ => null,
-      };
+      _tryGetDependency<T>(key)?._currentValue;
 
   /// Add or update a dependency.
   Unregister add<T extends Object>(Dependency<T> dependency) {
@@ -350,8 +314,8 @@ class Deps extends EventNotifier<DepsEvent> {
   /// an [ArgumentError]. To see if a dependency is registered, use
   /// [isRegistered].
   /// {@endtemplate}
-  T get<T extends Object>() {
-    final dependency = _tryGetDependency<T>();
+  T get<T extends Object>([DependencyKey? key]) {
+    final dependency = _tryGetDependency<T>(key);
     if (dependency == null) {
       throw ArgumentError('Value with key $T has not been registered');
     }
@@ -371,16 +335,6 @@ class Deps extends EventNotifier<DepsEvent> {
       throw ArgumentError('Value with key $T has not been registered');
     }
     return dependency.tryResolve();
-  }
-
-  /// Returns a future that resolves when the specified dependency
-  /// is initialized. If the dependency hasn't been registered yet,
-  /// the future will still wait until it is.
-  ///
-  /// Note that this might be dangerous if the dependency is never registered.
-  /// In this case the future will never resolve.
-  Future<T> getAsync<T extends Object>([DependencyKey? key]) {
-    return observe<T>(key).first;
   }
 
   T? _tryResolveValue<T extends Object>([DependencyKey? key]) {
@@ -436,24 +390,8 @@ class Deps extends EventNotifier<DepsEvent> {
   ///   runApp(MyApp());
   /// }
   /// ```
-  Future<void> ensureResolved(Iterable<Type> types) async {
-    await [
-      for (final type in types) getAsync(type),
-    ].wait;
-  }
-
-  Future<void> ensureAllEagerResolved() async {
-    final eagerValues =
-        _values.values.where((v) => !v.dependency.lazy).toList();
-
-    await Future.wait([
-      for (final value in eagerValues.where((v) => v.dependency.isAsync))
-        value.resolveAsync(),
-    ]);
-
-    for (final value in eagerValues.where((v) => !v.dependency.isAsync)) {
-      value.resolve();
-    }
+  void ensureResolved(Iterable<DependencyKey> keys) {
+    keys.forEach(get);
   }
 
   /// Dispose of the [Deps] instance and all dependencies it contains.
@@ -508,7 +446,7 @@ class ManagedDependency<T extends Object> {
 
   final _controller = StreamController<T>.broadcast();
   StreamSubscription<void>? _observeSubscription;
-  FutureOr<T>? _currentValue;
+  T? _currentValue;
   bool _debugCreateCalled = false;
   bool _isDisposed = false;
 
@@ -523,40 +461,29 @@ class ManagedDependency<T extends Object> {
       throw StateError('Possibly encountered a cycle when creating dependency');
     }
     _debugCreateCalled = true;
+    _currentValue = dependency.create(deps);
+    // reason: ManagedDependency and Deps work in tandem
+    // ignore: invalid_use_of_protected_member
+    deps.notify(DependencyChanged(key: key));
 
-    if (dependency.create case final create?) {
-      _currentValue = create(deps);
-    } else if (dependency.createAsync case final createAsync?) {
-      _currentValue = createAsync(deps);
-    } else {
-      throw StateError('Dependency has no create or createAsync callback');
+    if ((dependency.observe, dependency.update)
+        case (final observe?, final update?)) {
+      unawaited(_observeSubscription?.cancel());
+      _observeSubscription = deps
+          .observeMany(observe)
+          .map((_) => update(deps, _currentValue!))
+          .listen((newValue) {
+        if (_isDisposed) {
+          return;
+        }
+        if (newValue != _currentValue) {
+          _currentValue = newValue;
+          // reason: ManagedDependency and Deps work in tandem
+          // ignore: invalid_use_of_protected_member
+          deps.notify(DependencyChanged(key: key));
+        }
+      });
     }
-
-    Future.sync(() async {
-      _currentValue = await _currentValue!;
-      // reason: ManagedDependency and Deps work in tandem
-      // ignore: invalid_use_of_protected_member
-      deps.notify(DependencyChanged(key: key));
-
-      if ((dependency.observe, dependency.update)
-          case (final observe?, final update?)) {
-        unawaited(_observeSubscription?.cancel());
-        _observeSubscription = deps
-            .observeMany(observe)
-            .map((_) => update(deps, _currentValue! as T))
-            .listen((newValue) {
-          if (_isDisposed) {
-            return;
-          }
-          if (newValue != _currentValue) {
-            _currentValue = newValue;
-            // reason: ManagedDependency and Deps work in tandem
-            // ignore: invalid_use_of_protected_member
-            deps.notify(DependencyChanged(key: key));
-          }
-        });
-      }
-    });
   }
 
   T resolve() {
@@ -564,25 +491,12 @@ class ManagedDependency<T extends Object> {
     return switch (_currentValue) {
       final T value => value,
       null => throw StateError('Initialization error. This is a bug.'),
-      Future<T>() => throw StateError('Value has not been resolved yet'),
     };
   }
 
   T? tryResolve() {
     _ensureInitialized();
-    return switch (_currentValue) {
-      final T value => value,
-      null => null,
-      Future<T>() => null,
-    };
-  }
-
-  Future<T> resolveAsync() async {
-    _ensureInitialized();
-    return switch (_currentValue) {
-      final FutureOr<T> value => value,
-      null => throw StateError('Initialization error. This is a bug.'),
-    };
+    return _currentValue;
   }
 
   Stream<T> watch() {
@@ -599,7 +513,7 @@ class ManagedDependency<T extends Object> {
     await _controller.close();
     if ((dependency.dispose, _currentValue)
         case (final dispose?, final value?)) {
-      final resolvedValue = await value;
+      final resolvedValue = value;
       await dispose(resolvedValue);
     }
   }

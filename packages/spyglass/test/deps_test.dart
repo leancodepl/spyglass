@@ -2,23 +2,6 @@ import 'package:spyglass/spyglass.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('pure', () {
-    globalDeps.add(
-      Dependency(
-        create: (deps) async {
-          final value = await deps.getAsync<int>();
-          return value > 10;
-        },
-      ),
-    );
-
-    Future<void>.delayed(const Duration(seconds: 3), () {
-      globalDeps.add(Dependency<int>.value(5));
-    });
-
-    expect(globalDeps.getAsync<bool>(), completion(isFalse));
-  });
-
   test('instant', () {
     deps
       ..add(Dependency<Bar>(create: (deps) => Bar()))
@@ -61,25 +44,6 @@ void main() {
     deps.add(Dependency.value(Baz(label: 'second')));
 
     expect(deps.get<Qux>().label, equals('second'));
-  });
-
-  test('eager resolves to expected value', () {
-    deps.add(Dependency(lazy: false, create: (deps) => Bar()));
-
-    expect(deps.get<Bar>(), isA<Bar>());
-  });
-
-  test('eager with unresolved dependency throws when adding', () {
-    deps.add(Dependency(create: (deps) async {
-      await Future<void>.delayed(const Duration(seconds: 1));
-      return Bar();
-    }));
-
-    expect(
-      () => deps
-          .add(Dependency(lazy: false, create: (deps) => Foo(bar: deps.get()))),
-      throwsStateError,
-    );
   });
 }
 
