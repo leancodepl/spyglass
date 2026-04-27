@@ -4,18 +4,18 @@ import 'package:test/test.dart';
 void main() {
   test('instant', () {
     deps
-      ..add(Dependency<Bar>(create: (deps) => Bar()))
-      ..add(Dependency<Foo>(create: (deps) => Foo(bar: deps.get())));
+      ..add(Dependency<Bar>((deps) => Bar()))
+      ..add(Dependency<Foo>((deps) => Foo(bar: deps.get())));
 
     expect(() => deps.get<Foo>(), returnsNormally);
   });
 
   test('observe mutable', () async {
     deps
-      ..add(Dependency(create: (deps) => Baz(label: 'first')))
+      ..add(Dependency((deps) => Baz(label: 'first')))
       ..add(
         Dependency(
-          create: (deps) => Qux(baz: deps.get()),
+          (_) => Qux(baz: deps.get()),
           observe: const [Baz],
           update: (deps, oldValue) => oldValue..baz = deps.get(),
         ),
@@ -30,10 +30,10 @@ void main() {
 
   test('observe immutable', () async {
     deps
-      ..add(Dependency(create: (deps) => Baz(label: 'first')))
+      ..add(Dependency((deps) => Baz(label: 'first')))
       ..add(
         Dependency(
-          create: (deps) => Qux(baz: deps.get()),
+          (_) => Qux(baz: deps.get()),
           observe: const [Baz],
           update: (deps, oldValue) => Qux(baz: deps.get()),
         ),

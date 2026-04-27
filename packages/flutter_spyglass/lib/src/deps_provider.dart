@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:spyglass/spyglass.dart';
+
+typedef Selector<T, R> = R Function(T value);
 
 /// Obtain the nearest [Deps] scope.
 Deps useDeps() {
@@ -42,9 +45,17 @@ extension DepsContext on BuildContext {
   T get<T extends Object>() => deps.get<T>();
 
   /// Watch the value of a dependency and rebuild the widget when it changes.
-  T observe<T extends Object>() => DepsProvider.observe<T>(this);
+  T observe<T extends Object>({bool observeState = true}) =>
+      DepsProvider.observe<T>(this, observeState: observeState);
 
-  T? maybeObserve<T extends Object>() => DepsProvider.maybeObserve<T>(this);
+  T? maybeObserve<T extends Object>({bool observeState = true}) =>
+      DepsProvider.maybeObserve<T>(this, observeState: observeState);
+
+  R select<T extends Object, R>(Selector<T, R> selector) =>
+      DepsProvider.select<T, R>(this, selector);
+
+  R? maybeSelect<T extends Object, R>(Selector<T, R> selector) =>
+      DepsProvider.maybeSelect<T, R>(this, selector);
 }
 
 /// Register on mount;  Unregister on unmount.
@@ -86,22 +97,50 @@ class DepsProvider extends HookWidget {
   }
 
   /// Observe the value of a dependency specified by [T].
-  static T observe<T extends Object>(BuildContext context) {
+  static T observe<T extends Object>(BuildContext context,
+      {bool observeState = true}) {
     return context
-        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: T)!
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(
+            aspect: (T, _ObserveOptions(observeState: observeState)))!
         .deps
         .get<T>();
   }
 
-  static T? maybeObserve<T extends Object>(BuildContext context) {
-    final deps = context
-        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: T)!
-        .deps;
+  static T? maybeObserve<T extends Object>(BuildContext context,
+      {bool observeState = true}) {
+    final deps = context.dependOnInheritedWidgetOfExactType<_DepsInherited>(
+        aspect: (T, _ObserveOptions(observeState: observeState)))!.deps;
     if (deps.isRegistered<T>()) {
       return deps.tryGet<T>();
     } else {
       return null;
     }
+  }
+
+  static R select<T extends Object, R>(
+      BuildContext context, Selector<T, R> selector) {
+    final value = context
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: (
+          T,
+          _ObserveOptions(observeState: true, selector: selector)
+        ))!
+        .deps
+        .get<T>();
+    return selector(value);
+  }
+
+  static R? maybeSelect<T extends Object, R>(
+      BuildContext context, Selector<T, R> selector) {
+    final deps = context.dependOnInheritedWidgetOfExactType<_DepsInherited>(
+        aspect: (
+          T,
+          _ObserveOptions(observeState: true, selector: selector)
+        ))!.deps;
+    if (!deps.isRegistered<T>()) {
+      return null;
+    }
+    final value = deps.tryGet<T>();
+    return value != null ? selector(value) : null;
   }
 
   @override
@@ -187,12 +226,10 @@ class _DepsElement extends InheritedElement {
   @override
   void updated(_DepsInherited oldWidget) {
     if (widget.deps != oldWidget.deps) {
-      for (final MapEntry(:key, value: sub) in _subscriptions.entries) {
+      for (final sub in _subscriptions.values) {
         sub.cancel();
-        _subscriptions[key] = widget.deps.observe(key.$2).listen((e) {
-          key.$1.didChangeDependencies();
-        });
       }
+      _subscriptions.clear();
     }
     super.updated(oldWidget);
   }
@@ -207,13 +244,24 @@ class _DepsElement extends InheritedElement {
     if (value == null) {
       return;
     }
-    if (value is! Type) {
-      throw ArgumentError.value(value, 'value', 'value must be a Type');
+    if (value is! (Type, _ObserveOptions)) {
+      throw ArgumentError.value(
+          value, 'value', 'value must be a (Type, _ObserveOptions)');
     }
-    _subscriptions[(dependent, value)]?.cancel();
-    _subscriptions[(dependent, value)] = widget.deps.observe(value).listen((e) {
-      dependent.markNeedsBuild();
-    });
+    final (type, options) = value;
+    _subscriptions[(dependent, type)] ??= () {
+      var stream =
+          widget.deps.observe(key: type, observeState: options.observeState);
+      if (options.selector case final selector?) {
+        stream = stream
+            .map((value) => (selector as dynamic)(value))
+            .pairwise()
+            .where((pair) => pair.first != pair.last);
+      }
+      return stream.listen((_) {
+        dependent.markNeedsBuild();
+      });
+    }();
   }
 
   @override
@@ -232,6 +280,55 @@ class _DepsElement extends InheritedElement {
     for (final sub in _subscriptions.values) {
       sub.cancel();
     }
+    _subscriptions.clear();
     super.unmount();
   }
+}
+
+class ListenableDependency<T extends Listenable> extends Dependency<T> {
+  const ListenableDependency(
+    super.create, {
+    super.debugLabel,
+    super.dispose,
+    super.observe,
+    super.tags,
+    super.update,
+  });
+
+  @override
+  DependencyObserver<T> createObserver(T value) =>
+      ListenableDependencyObserver(value);
+}
+
+class ListenableDependencyObserver<T extends Listenable>
+    implements DependencyObserver<T> {
+  ListenableDependencyObserver(this.listenable) {
+    listenable.addListener(_listener);
+  }
+  final T listenable;
+
+  final StreamController<T> _controller = StreamController<T>.broadcast();
+
+  void _listener() {
+    _controller.add(listenable);
+  }
+
+  @override
+  Future<void> dispose() {
+    listenable.removeListener(_listener);
+    return _controller.close();
+  }
+
+  @override
+  Stream<T> listen() {
+    return _controller.stream;
+  }
+}
+
+@immutable
+class _ObserveOptions {
+  const _ObserveOptions({required this.observeState, this.selector});
+
+  final bool observeState;
+  final Function? selector;
 }

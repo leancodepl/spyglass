@@ -17,6 +17,10 @@ typedef DependencyKey = Type;
 /// Callback to unregister a dependency. It will be disposed of automatically.
 typedef Unregister = void Function();
 
+/// A factory function to create a [DependencyObserver] for a dependency.
+typedef DependencyObserverFactory<T extends Object> = DependencyObserver<T>?
+    Function(T value);
+
 /// Event emitted by [Deps] when a dependency is registered, unregistered,
 /// or changed.
 sealed class DepsEvent {}
@@ -69,14 +73,16 @@ final class DependencyChanged extends Equatable implements DepsEvent {
 class Dependency<T extends Object> {
   /// An immutable object describing a dependency. It can be registered in [Deps]
   /// by using [Deps.add].
-  const Dependency({
-    required this.create,
+  const Dependency(
+    this.create, {
     this.observe,
     this.update,
     this.dispose,
     this.tags,
     this.debugLabel,
-  }) : assert(
+    DependencyObserverFactory<T>? createObserver,
+  })  : createObserverFn = createObserver,
+        assert(
           observe != null || update == null,
           'when must be provided if update is provided',
         );
@@ -86,10 +92,16 @@ class Dependency<T extends Object> {
   ///
   /// This is a shorthand for creating a dependency that doesn't change
   /// over time and does not need to be lazily created.
-  Dependency.value(T value, {this.tags, this.dispose, this.debugLabel})
-      : create = ((_) => value),
+  Dependency.value(
+    T value, {
+    this.tags,
+    this.dispose,
+    this.debugLabel,
+    DependencyObserverFactory<T>? createObserver,
+  })  : create = ((_) => value),
         observe = null,
-        update = null;
+        update = null,
+        createObserverFn = createObserver;
 
   /// The key or type of the dependency. It is a unique identifier for the
   /// dependency in its [Deps].
@@ -122,12 +134,19 @@ class Dependency<T extends Object> {
   /// A debug label to help identify the dependency in logs.
   final String? debugLabel;
 
+  // reason: no other way
+  // ignore: unsafe_variance
+  final DependencyObserverFactory<T>? createObserverFn;
+
   /// NOTE
   /// This method is required to retain generic type information when creating
   /// a [ManagedDependency] instance in e.g. [Deps.addMany]
   // ignore: comment_references
   /// and [DepsProvider.register] from flutter_spyglass.
   ManagedDependency<T> _toManaged(Deps deps) => ManagedDependency(this, deps);
+
+  DependencyObserver<T> createObserver(T value) =>
+      createObserverFn?.call(value) ?? NoDependencyObserver(value: value);
 
   @override
   String toString() {
@@ -348,7 +367,23 @@ class Deps extends EventNotifier<DepsEvent> {
   /// Note that this stream only emits when a new instance is registered, so
   /// if a dependency is a ChangeNotifier, Bloc, or similar, observe won't emit
   /// when its internal state changes.
-  Stream<T> observe<T extends Object>([DependencyKey? key]) async* {
+  Stream<T> observe<T extends Object>({
+    DependencyKey? key,
+    bool observeState = false,
+  }) async* {
+    if (observeState) {
+      yield* observe<T>(key: key).switchMap((value) {
+        final dependency =
+            _tryGetDependency(key ?? T)?.dependency as Dependency<T>?;
+        // should never happen
+        if (dependency == null) {
+          return Stream.empty();
+        }
+        final listener = dependency.createObserver(value);
+        return listener.listen().doOnCancel(listener.dispose);
+      });
+      return;
+    }
     final effectiveKey = key ?? T;
     final value = _tryResolveValue<T>(key);
     if (value != null) {
@@ -407,7 +442,7 @@ class Deps extends EventNotifier<DepsEvent> {
 
 extension DepsObserveMany on Deps {
   Stream<List<Object>> observeMany(List<Type> types) => Rx.combineLatest(
-        types.map(observe),
+        types.map((type) => observe(key: type)),
         (values) => values,
       );
 
@@ -516,5 +551,27 @@ class ManagedDependency<T extends Object> {
       final resolvedValue = value;
       await dispose(resolvedValue);
     }
+  }
+}
+
+abstract class DependencyObserver<T extends Object> {
+  Stream<T> listen();
+
+  Future<void> dispose();
+}
+
+class NoDependencyObserver<T extends Object> implements DependencyObserver<T> {
+  NoDependencyObserver({
+    required this.value,
+  });
+
+  final T value;
+
+  @override
+  Stream<T> listen() => Stream.value(value);
+
+  @override
+  Future<void> dispose() async {
+    // no-op
   }
 }

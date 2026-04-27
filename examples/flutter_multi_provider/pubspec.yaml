@@ -13,7 +13,9 @@ dependencies:
     sdk: flutter
   flutter_spyglass:
     path: ../../packages/flutter_spyglass
-  flutter_bloc: ^8.1.4
+  flutter_bloc: ^9.0.0
+  flutter_spyglass_bloc:
+    path: ../../packages/flutter_spyglass_bloc
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,10 @@ dev_dependencies:
 workspace:
   - packages/spyglass
   - packages/flutter_spyglass
+  - packages/flutter_spyglass_bloc
   - examples/*
 
 melos:
+  scripts:
+    analyze:
+      exec: dart analyze .
