@@ -70,7 +70,7 @@ final class DependencyChanged extends Equatable implements DepsEvent {
 /// An immutable object describing a dependency. It can be registered in [Deps]
 /// by using [Deps.add].
 @immutable
-class Dependency<T extends Object> {
+class Dependency<T extends Object> implements Registerable {
   /// An immutable object describing a dependency. It can be registered in [Deps]
   /// by using [Deps.add].
   const Dependency(
@@ -152,6 +152,9 @@ class Dependency<T extends Object> {
   String toString() {
     return 'Dependency<$T>($debugLabel)';
   }
+
+  @override
+  Iterable<Dependency<Object>> get dependencies => [this];
 }
 
 /// A box that contains dependencies. Deps can also form a tree-like hierarchy
@@ -246,21 +249,29 @@ class Deps extends EventNotifier<DepsEvent> {
       _tryGetDependency<T>(key)?._currentValue;
 
   /// Add or update a dependency.
-  Unregister add<T extends Object>(Dependency<T> dependency) {
-    final managed = dependency._toManaged(this);
+  Unregister add(Registerable registerable) {
+    final keys = [
+      for (final dependency in registerable.dependencies) dependency.key,
+    ];
+    for (final dependency in registerable.dependencies) {
+      final managed = dependency._toManaged(this);
 
-    remove(managed.key);
-    _values[managed.key] = managed;
-    notify(DependencyRegistered(key: managed.key));
-    return () => remove(managed.key);
+      remove(managed.key);
+      _values[managed.key] = managed;
+      notify(DependencyRegistered(key: managed.key));
+    }
+
+    return () {
+      keys.forEach(remove);
+    };
   }
 
   /// Helper method for adding multiple dependencies at once if you find
   /// calling `deps..add()..add()...` too verbose.
-  Unregister addMany(Iterable<Dependency<Object>> dependencies) {
+  Unregister addMany(Iterable<Registerable> registerables) {
     final unregisters = <Unregister>[];
-    for (final dependency in dependencies) {
-      final unregister = add(dependency);
+    for (final registerable in registerables) {
+      final unregister = add(registerable);
       unregisters.add(unregister);
     }
 
@@ -574,4 +585,17 @@ class NoDependencyObserver<T extends Object> implements DependencyObserver<T> {
   Future<void> dispose() async {
     // no-op
   }
+}
+
+class Module implements Registerable {
+  Module({
+    required this.dependencies,
+  });
+
+  @override
+  final List<Dependency<Object>> dependencies;
+}
+
+abstract class Registerable {
+  Iterable<Dependency<Object>> get dependencies;
 }
