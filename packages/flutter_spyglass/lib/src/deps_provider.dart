@@ -76,7 +76,7 @@ class DepsProvider extends HookWidget {
 
   /// A list of dependencies to register on mount and unregister on unmount.
   /// These dependencies will be bound to this widget, effectively.
-  final Iterable<Dependency<Object>>? register;
+  final Iterable<Registerable>? register;
 
   /// By default [DepsProvider] introduces a new scope. Set this to `false` to
   /// just register new dependencies in [register].
@@ -178,7 +178,7 @@ class DepsProvider extends HookWidget {
 
         return unregister;
       },
-      [deps, ...?register?.map((e) => e.key)],
+      [deps, ...?register?.expand((e) => e.dependencies).map((e) => e.key)],
     );
 
     return _DepsInherited(
@@ -322,6 +322,22 @@ class ListenableDependencyObserver<T extends Listenable>
   @override
   Stream<T> listen() {
     return _controller.stream;
+  }
+}
+
+class ChangeNotifierDependency<T extends ChangeNotifier>
+    extends ListenableDependency<T> {
+  const ChangeNotifierDependency(
+    super.create, {
+    super.debugLabel,
+    super.observe,
+    super.tags,
+    super.update,
+    FutureOr<void> Function(T value)? dispose,
+  }) : super(dispose: dispose ?? _dispose);
+
+  static void _dispose(ChangeNotifier value) {
+    value.dispose();
   }
 }
 
