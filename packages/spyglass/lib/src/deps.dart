@@ -150,11 +150,13 @@ class Dependency<T extends Object> implements Registerable {
 
   @override
   String toString() {
-    return 'Dependency<$T>($debugLabel)';
+    return "Dependency<$T>('$debugLabel')";
   }
 
   @override
-  Iterable<Dependency<Object>> get dependencies => [this];
+  Iterable<Dependency<Object>> get dependencies sync* {
+    yield this;
+  }
 }
 
 /// A box that contains dependencies. Deps can also form a tree-like hierarchy
@@ -588,12 +590,18 @@ class NoDependencyObserver<T extends Object> implements DependencyObserver<T> {
 }
 
 class Module implements Registerable {
-  Module({
-    required this.dependencies,
+  Module(
+    this.dependencies, {
+    this.debugLabel,
   });
 
   @override
   final List<Dependency<Object>> dependencies;
+
+  final String? debugLabel;
+
+  @override
+  String toString() => "Module('$debugLabel')";
 }
 
 abstract class Registerable {
