@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_spyglass/flutter_spyglass.dart';
@@ -27,18 +29,16 @@ class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
 }
 
 class BlocDependencyObserver<TBloc extends BlocBase>
-    implements DependencyObserver<TBloc> {
-  BlocDependencyObserver(this.bloc);
+    extends DependencyObserver<TBloc> {
+  BlocDependencyObserver(this.bloc) {
+    _subscription = bloc.stream.listen((_) => notifyStateChanged());
+  }
 
   final TBloc bloc;
-
-  @override
-  Stream<TBloc> listen() {
-    return bloc.stream.map((_) => bloc);
-  }
+  late final StreamSubscription<void> _subscription;
 
   @override
   Future<void> dispose() async {
-    // no-op
+    await _subscription.cancel();
   }
 }

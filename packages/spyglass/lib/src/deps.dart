@@ -145,8 +145,9 @@ class Dependency<T extends Object> implements Registerable {
   /// and [DepsProvider.register] from flutter_spyglass.
   ManagedDependency<T> _toManaged(Deps deps) => ManagedDependency(this, deps);
 
-  DependencyObserver<T> createObserver(T value) =>
-      createObserverFn?.call(value) ?? NoDependencyObserver(value: value);
+  /// Returns `null` if this dependency has no [createObserverFn], i.e. it
+  /// never reports internal state changes - see [DependencyObserver].
+  DependencyObserver<T>? createObserver(T value) => createObserverFn?.call(value);
 
   @override
   String toString() {
@@ -374,49 +375,86 @@ class Deps extends EventNotifier<DepsEvent> {
     return dependency?.tryResolve();
   }
 
-  /// Observe all changes to a dependency. For watching multiple dependencies
-  /// at once see extensions [observe2], [observe3] etc.
+  /// Observe changes to a dependency. For watching multiple dependencies at
+  /// once see extensions [observe2], [observe3] etc.
   ///
-  /// Note that this stream only emits when a new instance is registered, so
-  /// if a dependency is a ChangeNotifier, Bloc, or similar, observe won't emit
-  /// when its internal state changes.
+  /// When [observeState] is `false` (the default), this stream only emits
+  /// when the dependency itself is (re-)registered, i.e. when [Deps.add] or
+  /// [Deps.replace] installs a new value under this key - it won't emit if
+  /// a value that happens to be a `ChangeNotifier`/`Listenable` fires its own
+  /// internal notifications.
+  ///
+  /// When [observeState] is `true`, this stream also emits whenever the
+  /// resolved value's [DependencyObserver] (see [Dependency.createObserver])
+  /// reports such an internal state change. Internal state changes are
+  /// delivered by subscribing directly to the backing [ManagedDependency]'s
+  /// own stream (shared by every subscriber of this key), not by broadcasting
+  /// through every dependency's shared event stream - so watching this key
+  /// doesn't cost anything when an unrelated dependency's state changes.
   Stream<T> observe<T extends Object>({
     DependencyKey? key,
     bool observeState = false,
-  }) async* {
-    if (observeState) {
-      yield* observe<T>(key: key).switchMap((value) {
-        final dependency =
-            _tryGetDependency(key ?? T)?.dependency as Dependency<T>?;
-        // should never happen
-        if (dependency == null) {
-          return Stream.empty();
-        }
-        final listener = dependency.createObserver(value);
-        return listener.listen().doOnCancel(listener.dispose);
-      });
-      return;
-    }
+  }) {
     final effectiveKey = key ?? T;
-    final value = _tryResolveValue<T>(key);
-    if (value != null) {
-      yield value;
+
+    // Emits (with no payload) whenever the ManagedDependency backing this key
+    // might have appeared, been replaced, or moved - i.e. registration
+    // events, not internal state changes. These are rare compared to state
+    // changes, so it's fine for every subscriber to filter this shared
+    // stream individually.
+    Stream<void> registrations() async* {
+      yield null;
+      await for (final event in events) {
+        final matches = switch (event) {
+          DependencyChanged(:final key) => key == effectiveKey,
+          DependencyRegistered(:final key) => key == effectiveKey,
+          DependencyUnregistered() => false,
+        };
+        if (matches) {
+          yield null;
+        }
+      }
     }
 
-    await for (final event in events) {
-      final shouldYield = switch (event) {
-        DependencyChanged(:final key) when key == effectiveKey => true,
-        DependencyRegistered(:final key) when key == effectiveKey => true,
-        _ => false,
-      };
-
-      if (shouldYield) {
+    if (!observeState) {
+      return registrations().expand((_) sync* {
         final value = _tryResolveValue<T>(key);
         if (value != null) {
           yield value;
         }
-      }
+      });
     }
+
+    return _switchToLatest(registrations(), () => _tryGetDependency<T>(key)?.watch());
+  }
+
+  /// Equivalent to `triggers.switchMap((_) => resolve() ?? Stream.empty())`,
+  /// hand-rolled to avoid rxdart's switchMap overhead - re-registration
+  /// (what [triggers] fires on) is rare, so a plain callback-based resubscribe
+  /// is cheaper than a full operator per subscriber.
+  static Stream<T> _switchToLatest<T extends Object>(
+    Stream<void> triggers,
+    Stream<T>? Function() resolve,
+  ) {
+    late final StreamController<T> controller;
+    StreamSubscription<void>? triggerSub;
+    StreamSubscription<T>? innerSub;
+
+    void resubscribe() {
+      unawaited(innerSub?.cancel());
+      innerSub = resolve()?.listen(controller.add, onError: controller.addError);
+    }
+
+    controller = StreamController<T>.broadcast(
+      onListen: () => triggerSub = triggers.listen((_) => resubscribe()),
+      onCancel: () {
+        unawaited(triggerSub?.cancel());
+        unawaited(innerSub?.cancel());
+        unawaited(controller.close());
+      },
+    );
+
+    return controller.stream;
   }
 
   /// Returns a future that resolves when all the specified dependencies are
@@ -492,11 +530,35 @@ class ManagedDependency<T extends Object> {
 
   DependencyKey get key => dependency.key;
 
-  final _controller = StreamController<T>.broadcast();
+  /// This dependency's own value stream, shared by every subscriber that
+  /// observes this key with `observeState: true` - see [Deps.observe] and
+  /// [watch]. Created lazily, on the first call to [watch], so a dependency
+  /// that's only ever plain-read via [Deps.get] - the common "just a service
+  /// locator" case - never pays for a [DependencyObserver] or a
+  /// [BehaviorSubject] it doesn't need.
+  BehaviorSubject<T>? _controller;
   StreamSubscription<void>? _observeSubscription;
   T? _currentValue;
+
+  /// One observer for the current [_currentValue], not one per subscriber -
+  /// see [DependencyObserver]. Only created once [watch] has been called at
+  /// least once (see [_controller]); recreated whenever [_currentValue]
+  /// itself is replaced (either by re-registration or by the
+  /// [Dependency.update] chain below).
+  DependencyObserver<T>? _stateObserver;
   bool _debugCreateCalled = false;
   bool _isDisposed = false;
+
+  /// No-op unless [watch] has already been called at least once for this
+  /// dependency - see [_controller].
+  void _attachStateObserverIfWatched(T value) {
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+    _stateObserver = dependency.createObserver(value)
+      ?..attach(() => controller.add(value));
+  }
 
   void _ensureInitialized() {
     if (_isDisposed) {
@@ -525,7 +587,12 @@ class ManagedDependency<T extends Object> {
           return;
         }
         if (newValue != _currentValue) {
+          final oldObserver = _stateObserver;
           _currentValue = newValue;
+          _stateObserver = null;
+          unawaited(oldObserver?.dispose());
+          _attachStateObserverIfWatched(newValue);
+          _controller?.add(newValue);
           // reason: ManagedDependency and Deps work in tandem
           // ignore: invalid_use_of_protected_member
           deps.notify(DependencyChanged(key: key));
@@ -549,7 +616,13 @@ class ManagedDependency<T extends Object> {
 
   Stream<T> watch() {
     _ensureInitialized();
-    return _controller.stream;
+    var controller = _controller;
+    if (controller == null) {
+      controller = _controller = BehaviorSubject<T>();
+      _attachStateObserverIfWatched(_currentValue!);
+      controller.add(_currentValue!);
+    }
+    return controller.stream;
   }
 
   Future<void> dispose() async {
@@ -558,7 +631,8 @@ class ManagedDependency<T extends Object> {
     }
     _isDisposed = true;
     await _observeSubscription?.cancel();
-    await _controller.close();
+    await _controller?.close();
+    await _stateObserver?.dispose();
     if ((dependency.dispose, _currentValue)
         case (final dispose?, final value?)) {
       final resolvedValue = value;
@@ -567,26 +641,35 @@ class ManagedDependency<T extends Object> {
   }
 }
 
+/// Observes internal state changes of an already-resolved dependency value -
+/// e.g. a wrapped `ChangeNotifier`/`Listenable` firing its own notifications
+/// - as opposed to the value itself being replaced. See
+/// [Dependency.createObserver].
+///
+/// The framework creates and disposes exactly one observer per resolved
+/// value, not one per subscriber to [Deps.observe]; call
+/// [notifyStateChanged] whenever the observed value's state changes and
+/// every current `observeState: true` subscriber for this key is notified.
 abstract class DependencyObserver<T extends Object> {
-  Stream<T> listen();
+  void Function()? _onChanged;
+
+  /// Wires this observer up to its owning [ManagedDependency]. Called by the
+  /// framework right after construction - implementers should not call this.
+  @internal
+  void attach(void Function() onChanged) {
+    _onChanged = onChanged;
+  }
+
+  /// Call this whenever the observed value's internal state changes, to
+  /// notify anyone observing this dependency via [Deps.observe] with
+  /// `observeState: true` - without needing to know about [Deps] or
+  /// [ManagedDependency] directly.
+  @protected
+  void notifyStateChanged() {
+    _onChanged?.call();
+  }
 
   Future<void> dispose();
-}
-
-class NoDependencyObserver<T extends Object> implements DependencyObserver<T> {
-  NoDependencyObserver({
-    required this.value,
-  });
-
-  final T value;
-
-  @override
-  Stream<T> listen() => Stream.value(value);
-
-  @override
-  Future<void> dispose() async {
-    // no-op
-  }
 }
 
 class Module implements Registerable {

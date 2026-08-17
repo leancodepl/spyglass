@@ -301,27 +301,17 @@ class ListenableDependency<T extends Listenable> extends Dependency<T> {
 }
 
 class ListenableDependencyObserver<T extends Listenable>
-    implements DependencyObserver<T> {
+    extends DependencyObserver<T> {
   ListenableDependencyObserver(this.listenable) {
     listenable.addListener(_listener);
   }
   final T listenable;
 
-  final StreamController<T> _controller = StreamController<T>.broadcast();
-
-  void _listener() {
-    _controller.add(listenable);
-  }
+  void _listener() => notifyStateChanged();
 
   @override
-  Future<void> dispose() {
+  Future<void> dispose() async {
     listenable.removeListener(_listener);
-    return _controller.close();
-  }
-
-  @override
-  Stream<T> listen() {
-    return _controller.stream;
   }
 }
 

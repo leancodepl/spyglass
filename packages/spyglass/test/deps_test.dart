@@ -45,6 +45,48 @@ void main() {
 
     expect(deps.get<Qux>().label, equals('second'));
   });
+
+  test('createObserver is only called once something actually watches',
+      () async {
+    var createObserverCalls = 0;
+    var disposeCalls = 0;
+
+    final scopeDeps = Deps.detached()
+      ..add(
+        Dependency<Bar>(
+          (_) => Bar(),
+          createObserver: (value) {
+            createObserverCalls++;
+            return _TrackingObserver(onDispose: () => disposeCalls++);
+          },
+        ),
+      );
+
+    // Plain reads - a pure "service locator" usage - shouldn't set up any
+    // observation machinery at all.
+    expect(scopeDeps.get<Bar>(), isA<Bar>());
+    expect(scopeDeps.get<Bar>(), isA<Bar>());
+    expect(createObserverCalls, equals(0));
+
+    // Only observing with observeState:true should trigger it, and only once.
+    final sub = scopeDeps.observe<Bar>(observeState: true).listen((_) {});
+    await Future<void>.delayed(Duration.zero);
+    expect(createObserverCalls, equals(1));
+
+    await sub.cancel();
+    await scopeDeps.dispose();
+    await Future<void>.delayed(Duration.zero);
+    expect(disposeCalls, equals(1));
+  });
+}
+
+class _TrackingObserver extends DependencyObserver<Bar> {
+  _TrackingObserver({required this.onDispose});
+
+  final void Function() onDispose;
+
+  @override
+  Future<void> dispose() async => onDispose();
 }
 
 class Bar {}
