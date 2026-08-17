@@ -266,7 +266,7 @@ class _DepsElement extends InheritedElement {
 
   @override
   void removeDependent(Element dependent) {
-    for (final key in _subscriptions.keys) {
+    for (final key in [..._subscriptions.keys]) {
       if (key.$1 == dependent) {
         _subscriptions[key]?.cancel();
         _subscriptions.remove(key);
