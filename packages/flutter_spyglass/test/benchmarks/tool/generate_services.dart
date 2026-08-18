@@ -109,6 +109,33 @@ void main() {
   for (var i = 0; i < serviceCount; i++) {
     buffer.writeln('  (c) => c.read<Svc$i>(),');
   }
+
+  buffer
+    ..writeln('];')
+    ..writeln()
+    ..writeln('/// Plain, non-reactive reads - never calls observe()/watch(),')
+    ..writeln('/// so on the spyglass side no DependencyObserver/BehaviorSubject')
+    ..writeln('/// is ever created for these services (see ManagedDependency).')
+    ..writeln(
+      'final List<Widget Function(BuildContext)> spyglassNonReactiveReaders = [',
+    );
+  for (var i = 0; i < serviceCount; i++) {
+    buffer.writeln(
+      '  (c) { buildCounts[$i]++; return Text(c.get<Svc$i>().value.toString()); },',
+    );
+  }
+
+  buffer
+    ..writeln('];')
+    ..writeln()
+    ..writeln(
+      'final List<Widget Function(BuildContext)> providerNonReactiveReaders = [',
+    );
+  for (var i = 0; i < serviceCount; i++) {
+    buffer.writeln(
+      '  (c) { buildCounts[$i]++; return Text(c.read<Svc$i>().value.toString()); },',
+    );
+  }
   buffer.writeln('];');
 
   stdout.write(buffer.toString());
