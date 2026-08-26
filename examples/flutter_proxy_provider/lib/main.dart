@@ -31,7 +31,7 @@ class MainApp extends StatelessWidget {
             child: Builder(
               builder: (context) {
                 final greeting =
-                    context.observe<MainPageLocalizations>().greeting;
+                    context.track<MainPageLocalizations>().greeting;
 
                 return Text(greeting);
               },

@@ -38,7 +38,7 @@ void main() {
       },
       body: () async {
         final scopeDeps = Deps.root.fork()
-          ..addMany([
+          ..addAll([
             for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
           ])
           ..ensureResolved(serviceTypes);
@@ -88,7 +88,7 @@ void main() {
       measuredRuns: runs,
       setUp: () async {
         final scopeDeps = Deps.root.fork()
-          ..addMany([
+          ..addAll([
             for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
           ])
           ..ensureResolved(serviceTypes);
@@ -164,7 +164,7 @@ void main() {
     var generation = 0;
 
     final scopeDeps = Deps.root.fork()
-      ..addMany([
+      ..addAll([
         for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
       ])
       ..ensureResolved(serviceTypes);
@@ -184,10 +184,13 @@ void main() {
       measuredRuns: runs,
       body: () async {
         generation++;
-        scopeDeps.addMany([
-          for (var i = 0; i < serviceCount; i++)
-            spyglassFactories[i](generation * 1000 + i),
-        ]);
+        // replace(), not addAll: these factories carry no cacheKey, so
+        // add() would now leave each service alone (null == null) instead
+        // of swapping in the new instance - replace() forces it, as
+        // intended for this "swap for a genuinely new instance" scenario.
+        for (var i = 0; i < serviceCount; i++) {
+          scopeDeps.replace(spyglassFactories[i](generation * 1000 + i));
+        }
         await tester.pump();
       },
     );

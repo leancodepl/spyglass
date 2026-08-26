@@ -29,7 +29,7 @@ class MainApp extends StatelessWidget {
                 children: [
                   Builder(
                     builder: (context) {
-                      final state = context.observe<DataCubit>().state;
+                      final state = context.track<DataCubit>().state;
                       final String? stateDescription =
                           switch (state.connectionState) {
                         ConnectionState.none => 'Idle',

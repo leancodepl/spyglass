@@ -28,7 +28,7 @@ void main() {
 
     // --- spyglass: mount once, then repeatedly mutate + pump.
     final scopeDeps = Deps.root.fork()
-      ..addMany([
+      ..addAll([
         for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
       ])
       ..ensureResolved(serviceTypes);

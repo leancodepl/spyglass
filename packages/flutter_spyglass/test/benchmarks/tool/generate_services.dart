@@ -66,7 +66,7 @@ void main() {
     ..writeln('final List<Widget Function(BuildContext)> spyglassReaders = [');
   for (var i = 0; i < serviceCount; i++) {
     buffer.writeln(
-      '  (c) { buildCounts[$i]++; return Text(c.observe<Svc$i>().value.toString()); },',
+      '  (c) { buildCounts[$i]++; return Text(c.track<Svc$i>().value.toString()); },',
     );
   }
 
