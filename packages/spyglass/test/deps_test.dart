@@ -68,8 +68,8 @@ void main() {
     expect(scopeDeps.get<Bar>(), isA<Bar>());
     expect(createObserverCalls, equals(0));
 
-    // Only track() should trigger it, and only once.
-    final sub = scopeDeps.track<Bar>().listen((_) {});
+    // Only watch() should trigger it, and only once.
+    final sub = scopeDeps.watch<Bar>().listen((_) {});
     await Future<void>.delayed(Duration.zero);
     expect(createObserverCalls, equals(1));
 
@@ -80,7 +80,7 @@ void main() {
   });
 
   test(
-      'track() shares one observer across multiple '
+      'watch() shares one observer across multiple '
       'subscribers to the same key', () async {
     var createObserverCalls = 0;
 
@@ -95,8 +95,8 @@ void main() {
         ),
       );
 
-    final sub1 = scopeDeps.track<Bar>().listen((_) {});
-    final sub2 = scopeDeps.track<Bar>().listen((_) {});
+    final sub1 = scopeDeps.watch<Bar>().listen((_) {});
+    final sub2 = scopeDeps.watch<Bar>().listen((_) {});
     await Future<void>.delayed(Duration.zero);
 
     expect(createObserverCalls, equals(1));
@@ -107,7 +107,7 @@ void main() {
   });
 
   test(
-      'trackInstance() never triggers observer creation, even '
+      'watchInstance() never triggers observer creation, even '
       'with multiple subscribers', () async {
     var createObserverCalls = 0;
 
@@ -122,8 +122,8 @@ void main() {
         ),
       );
 
-    final sub1 = scopeDeps.trackInstance<Bar>().listen((_) {});
-    final sub2 = scopeDeps.trackInstance<Bar>().listen((_) {});
+    final sub1 = scopeDeps.watchInstance<Bar>().listen((_) {});
+    final sub2 = scopeDeps.watchInstance<Bar>().listen((_) {});
     await Future<void>.delayed(Duration.zero);
 
     expect(createObserverCalls, equals(0));
@@ -133,7 +133,7 @@ void main() {
     await scopeDeps.dispose();
   });
 
-  test('track() switches to a newly re-registered '
+  test('watch() switches to a newly re-registered '
       'instance and stops reacting to the old one', () async {
     Dependency<Counter> makeCounter(int value) => Dependency<Counter>(
           (_) => Counter(value),
@@ -144,7 +144,7 @@ void main() {
 
     final values = <int>[];
     final sub =
-        scopeDeps.track<Counter>().listen((c) => values.add(c.value));
+        scopeDeps.watch<Counter>().listen((c) => values.add(c.value));
     await Future<void>.delayed(Duration.zero);
 
     final firstCounter = scopeDeps.get<Counter>()..set(2);
@@ -179,7 +179,7 @@ void main() {
 
     final scopeDeps = Deps.detached()..add(makeCounter('first', 1));
 
-    final sub = scopeDeps.track<Counter>().listen((_) {});
+    final sub = scopeDeps.watch<Counter>().listen((_) {});
     await Future<void>.delayed(Duration.zero);
     expect(disposedLabels, isEmpty);
 
@@ -244,6 +244,61 @@ void main() {
     expect(scopeDeps.peek<Bar>(), same(value));
   });
 
+  test('debugLabel shows up in toString(), falling back to root/identity '
+      'when unset', () {
+    final labeled = Deps.detached(debugLabel: 'AuthScope');
+    expect(labeled.toString(), equals("Deps('AuthScope')"));
+
+    final forkedLabel = labeled.fork(debugLabel: 'ChildScope');
+    expect(forkedLabel.toString(), equals("Deps('ChildScope')"));
+
+    final unlabeled = Deps.detached();
+    expect(unlabeled.toString(), isNot(contains('null')));
+    expect(Deps.root.toString(), equals('Deps(root)'));
+  });
+
+  test('isDisposed reflects dispose()', () async {
+    final scopeDeps = Deps.detached();
+    expect(scopeDeps.isDisposed, isFalse);
+    await scopeDeps.dispose();
+    expect(scopeDeps.isDisposed, isTrue);
+  });
+
+  test('debugOwnDependencies reports registration and resolution state, '
+      'regardless of spyglassDiagnosticsMode', () {
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+
+    final beforeResolve = scopeDeps.debugOwnDependencies.single;
+    expect(beforeResolve.key, equals(Bar));
+    expect(beforeResolve.isResolved, isFalse);
+    expect(beforeResolve.value, isNull);
+
+    final value = scopeDeps.get<Bar>();
+
+    final afterResolve = scopeDeps.debugOwnDependencies.single;
+    expect(afterResolve.isResolved, isTrue);
+    expect(afterResolve.value, same(value));
+  });
+
+  test('debugChildren tracks live fork()ed scopes, only when '
+      'spyglassDiagnosticsMode is enabled', () {
+    final root = Deps.detached();
+    expect(root.debugChildren, isEmpty);
+
+    final child = root.fork();
+    expect(
+      root.debugChildren,
+      spyglassDiagnosticsMode ? contains(child) : isEmpty,
+    );
+  });
+
+  test('debugChildren drops a scope once it is disposed', () async {
+    final root = Deps.detached();
+    final child = root.fork();
+    await child.dispose();
+    expect(root.debugChildren, isNot(contains(child)));
+  });
+
   test('DependencyCycleException is thrown for a self-referential create()',
       () {
     final scopeDeps = Deps.detached()
@@ -290,6 +345,78 @@ void main() {
     scopeDeps.replace(Dependency<Bar>((_) => Bar(), cacheKey: 'v1'));
 
     expect(scopeDeps.get<Bar>(), isNot(same(first)));
+  });
+
+  test('remove() accepts a Module and removes every dependency it groups',
+      () {
+    final module = Module([
+      Dependency<Bar>((_) => Bar()),
+      Dependency<Foo>((deps) => Foo(bar: deps.get())),
+    ]);
+    final scopeDeps = Deps.detached()..add(module);
+
+    expect(scopeDeps.isRegistered<Bar>(), isTrue);
+    expect(scopeDeps.isRegistered<Foo>(), isTrue);
+
+    scopeDeps.remove(module);
+
+    expect(scopeDeps.isRegistered<Bar>(), isFalse);
+    expect(scopeDeps.isRegistered<Foo>(), isFalse);
+  });
+
+  test('remove() accepts a Registerable describing the same dependency '
+      'types, without needing the exact original instance', () {
+    Module makeModule() => Module([
+          Dependency<Bar>((_) => Bar()),
+          Dependency<Foo>((deps) => Foo(bar: deps.get())),
+        ]);
+    final scopeDeps = Deps.detached()
+      ..add(makeModule())
+      // A fresh Module instance describing the same dependency types
+      // removes the same keys - lookup is by type, not Module identity.
+      ..remove(makeModule());
+
+    expect(scopeDeps.isRegistered<Bar>(), isFalse);
+    expect(scopeDeps.isRegistered<Foo>(), isFalse);
+  });
+
+  test('remove() accepts a plain Dependency, equivalent to removing its key',
+      () {
+    final dependency = Dependency<Bar>((_) => Bar());
+    final scopeDeps = Deps.detached()
+      ..add(dependency)
+      ..remove(dependency);
+
+    expect(scopeDeps.isRegistered<Bar>(), isFalse);
+  });
+
+  test('remove() throws ArgumentError for a value that is neither a Type '
+      'nor a Registerable', () {
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+
+    expect(
+      () => scopeDeps.remove(42),
+      throwsA(isA<ArgumentError>()),
+    );
+  });
+
+  test('debugOwnDependencies reports isStandalone and module correctly', () {
+    final module = Module([Dependency<Bar>((_) => Bar())], debugLabel: 'M');
+    final scopeDeps = Deps.detached()
+      ..add(module)
+      ..add(Dependency<Foo>((deps) => Foo(bar: deps.get())));
+
+    final byKey = {
+      for (final entry in scopeDeps.debugOwnDependencies) entry.key: entry,
+    };
+
+    final grouped = byKey[Bar]!;
+    expect(grouped.isStandalone, isFalse);
+    expect(grouped.module, same(module));
+
+    final standalone = byKey[Foo]!;
+    expect(standalone.isStandalone, isTrue);
+    expect(standalone.module, isNull);
   });
 }
 

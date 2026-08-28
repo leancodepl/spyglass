@@ -1,10 +1,14 @@
 import 'dart:async' as async;
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
-import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:spyglass/src/event_notifier.dart';
+
+import 'dependency.dart';
+import 'deps_events.dart';
+import 'deps_exceptions.dart';
+import 'managed_dependency.dart';
+import 'types.dart';
 
 final _zoneKey = Object();
 Deps get globalDeps => Zone.current[_zoneKey] as Deps? ?? Deps.root;
@@ -12,244 +16,34 @@ Deps get globalDeps => Zone.current[_zoneKey] as Deps? ?? Deps.root;
 /// Alias for [globalDeps].
 Deps get deps => globalDeps;
 
-typedef DependencyKey = Type;
+/// Whether this is a debug build - the same computation Flutter's own
+/// `kDebugMode` uses, replicated here so it works without a dependency on
+/// Flutter (this package doesn't have one, on purpose).
+const bool _kIsDebugBuild = !bool.fromEnvironment('dart.vm.product') &&
+    !bool.fromEnvironment('dart.vm.profile');
 
-/// Callback to unregister a dependency. It will be disposed of automatically.
-typedef Unregister = void Function();
-
-/// A factory function to create a [DependencyObserver] for a dependency.
-typedef DependencyObserverFactory<T extends Object> = DependencyObserver<T>?
-    Function(T value);
-
-/// Event emitted by [Deps] when a dependency is registered, unregistered,
-/// or changed.
-sealed class DepsEvent {}
-
-/// Event emitted by [Deps] when a dependency is registered. It does not mean
-/// its value can be read by [Deps.get] if the dependency is asynchronous.
-/// When an async dependency is resolved it will be followed by
-/// a [DependencyChanged] event.
-final class DependencyRegistered extends Equatable implements DepsEvent {
-  const DependencyRegistered({
-    required this.key,
-  });
-
-  /// The key of the dependency that was registered.
-  final DependencyKey key;
-
-  @override
-  List<Object?> get props => [key];
-}
-
-/// Event emitted by [Deps] when a dependency is unregistered.
-final class DependencyUnregistered extends Equatable implements DepsEvent {
-  const DependencyUnregistered({
-    required this.key,
-  });
-
-  /// The key of the dependency that was unregistered.
-  final DependencyKey key;
-
-  @override
-  List<Object?> get props => [key];
-}
-
-/// Event emitted by [Deps] when a dependency value is changed, i.e.
-/// as a result of the [Dependency.create] or [Dependency.update] callback.
-final class DependencyChanged extends Equatable implements DepsEvent {
-  const DependencyChanged({
-    required this.key,
-  });
-
-  final DependencyKey key;
-
-  @override
-  List<Object?> get props => [key];
-}
-
-/// Thrown by [Deps.get] and [Deps.tryGet] when no dependency is registered
-/// under [key] in this [Deps] scope or any of its ancestors.
-class DependencyNotRegisteredException implements Exception {
-  const DependencyNotRegisteredException(this.key);
-
-  /// The key that was looked up.
-  final DependencyKey key;
-
-  @override
-  String toString() =>
-      'DependencyNotRegisteredException: No dependency is registered for '
-      '$key in this Deps scope or any of its ancestors.\n'
-      'Check that it was added via Deps.add/Deps.replace, or listed in the '
-      'register: of a DepsProvider above this point in the widget tree - '
-      'and that the type matches exactly, since Deps looks up by exact '
-      'runtime Type.';
-}
-
-/// Thrown by [Deps.get] when [key] is registered but its value hasn't
-/// finished resolving yet - e.g. [Dependency.create] is asynchronous and
-/// still running.
-class DependencyNotResolvedException implements Exception {
-  const DependencyNotResolvedException(this.key);
-
-  /// The key that was looked up.
-  final DependencyKey key;
-
-  @override
-  String toString() =>
-      'DependencyNotResolvedException: $key is registered, but its value '
-      "hasn't resolved yet - Dependency.create is still running (likely "
-      'asynchronous).\n'
-      'Use Deps.tryGet for a nullable result instead of throwing, or await '
-      'Deps.ensureResolved([$key]) before calling Deps.get.';
-}
-
-/// Thrown when an operation needs this [Deps] scope to still be alive, but
-/// [Deps.dispose] has already been called on it - by [Deps.add] (adding to a
-/// disposed scope makes no sense) and by [Deps.get]/[Deps.tryGet] (resolving
-/// a value from a scope whose dependencies have all been torn down doesn't
-/// either).
-class DepsDisposedException implements Exception {
-  const DepsDisposedException({this.key});
-
-  /// The dependency key involved, if the failing operation was about a
-  /// specific key (e.g. [Deps.get]) rather than the scope as a whole (e.g.
-  /// [Deps.add]).
-  final DependencyKey? key;
-
-  @override
-  String toString() {
-    final about = key == null ? '' : ' (while resolving $key)';
-    return 'DepsDisposedException: This Deps scope has already been '
-        'disposed$about and can no longer register or resolve '
-        'dependencies.\n'
-        "If this came from a widget, you're likely holding onto a Deps "
-        'reference that outlived its DepsProvider - e.g. a callback that '
-        'captured a Deps and ran after the provider that owned it unmounted.';
-  }
-}
-
-/// Thrown when resolving [key] re-enters its own [Dependency.create] before
-/// the first call has finished - i.e. a dependency, directly or indirectly,
-/// depends on itself.
-class DependencyCycleException implements Exception {
-  const DependencyCycleException(this.key);
-
-  /// The key whose creation cycled back on itself.
-  final DependencyKey key;
-
-  @override
-  String toString() =>
-      'DependencyCycleException: Creating $key triggered another attempt to '
-      'resolve $key before the first one finished.\n'
-      'This usually means Dependency.create for $key - directly, or '
-      'indirectly via Deps.get inside it - depends on itself.';
-}
-
-/// An immutable object describing a dependency. It can be registered in [Deps]
-/// by using [Deps.add].
-@immutable
-class Dependency<T extends Object> implements Registerable {
-  /// An immutable object describing a dependency. It can be registered in [Deps]
-  /// by using [Deps.add].
-  const Dependency(
-    this.create, {
-    this.observe,
-    this.update,
-    this.dispose,
-    this.tags,
-    this.debugLabel,
-    this.cacheKey,
-    DependencyObserverFactory<T>? createObserver,
-  })  : createObserverFn = createObserver,
-        assert(
-          observe != null || update == null,
-          'when must be provided if update is provided',
-        );
-
-  /// An immutable object describing a dependency. It can be registered in [Deps]
-  /// by using [Deps.add].
-  ///
-  /// This is a shorthand for creating a dependency that doesn't change
-  /// over time and does not need to be lazily created.
-  Dependency.value(
-    T value, {
-    this.tags,
-    this.dispose,
-    this.debugLabel,
-    this.cacheKey,
-    DependencyObserverFactory<T>? createObserver,
-  })  : create = ((_) => value),
-        observe = null,
-        update = null,
-        createObserverFn = createObserver;
-
-  /// The key or type of the dependency. It is a unique identifier for the
-  /// dependency in its [Deps].
-  DependencyKey get key => T;
-
-  /// An additional piece of identity, compared via `==`, that [Deps.add]
-  /// uses (alongside [key]) to decide whether a new [Dependency] registered
-  /// under the same key represents a genuine change or should be left
-  /// alone - analogous to Flutter's `Widget.key`. Defaults to `null`, which
-  /// is only ever considered equal to another `null` cacheKey - so by
-  /// default, calling [Deps.add] again under the same key with no cacheKey
-  /// specified is treated as "unchanged," and the existing value is left in
-  /// place rather than disposed and recreated. Use [Deps.replace] to force
-  /// a replacement regardless of cacheKey.
-  final Object? cacheKey;
-
-  /// Tags can be used to categorize dependencies and perform operations on them.
-  /// For example, you can use a 'startup' tag to mark dependencies that need to be
-  /// initialized before the application starts. Then, use [Deps.ensureResolved] to
-  /// wait for them to be resolved before proceeding.
-  final List<Object>? tags;
-
-  /// Creates a new instance of [T]. You can use provided [Deps] to obtain
-  /// required dependencies. This callback can be asynchronous to perform
-  /// long running initialization or await another dependency.
-  final T Function(Deps deps) create;
-
-  /// Updates or creates a new instance of the dependency in reaction to
-  /// changes in other dependencies specified by [observe].
-  // ignore: unsafe_variance
-  final T Function(Deps deps, T oldValue)? update;
-
-  /// Use one of [Deps.trackInstance], [DepsTrackMany.track2] etc. to
-  /// specify which changes you want to observe.
-  final List<DependencyKey>? observe;
-
-  /// Perform actions to clean up after the object is no longer needed.
-  // ignore: unsafe_variance, avoid_futureor_void
-  final FutureOr<void> Function(T value)? dispose;
-
-  /// A debug label to help identify the dependency in logs.
-  final String? debugLabel;
-
-  // reason: no other way
-  // ignore: unsafe_variance
-  final DependencyObserverFactory<T>? createObserverFn;
-
-  /// NOTE
-  /// This method is required to retain generic type information when creating
-  /// a [ManagedDependency] instance in e.g. [Deps.addAll]
-  // ignore: comment_references
-  /// and [DepsProvider.register] from flutter_spyglass.
-  ManagedDependency<T> _toManaged(Deps deps) => ManagedDependency(this, deps);
-
-  /// Returns `null` if this dependency has no [createObserverFn], i.e. it
-  /// never reports internal state changes - see [DependencyObserver].
-  DependencyObserver<T>? createObserver(T value) => createObserverFn?.call(value);
-
-  @override
-  String toString() {
-    return "Dependency<$T>('$debugLabel')";
-  }
-
-  @override
-  Iterable<Dependency<Object>> get dependencies sync* {
-    yield this;
-  }
-}
+/// Enables tracking of a [Deps] scope's child scopes (created via
+/// [Deps.fork]) purely for inspection - see [Deps.debugChildren], and
+/// flutter_spyglass's diagnostics extensions for viewing a whole hierarchy.
+///
+/// This has a real, if small, cost: while enabled, every [Deps] holds a
+/// strong reference to each of its live child scopes for as long as they
+/// exist, purely so they can be found again for inspection - not something
+/// worth paying for by default outside of debugging. It's on by default in
+/// debug builds and off in profile/release builds, but it's a compile-time
+/// `const`, so:
+///  - force it on in profile/release with
+///    `--dart-define=spyglass.diagnosticsMode=true`, e.g. to diagnose a
+///    scope leak that doesn't reproduce in debug mode;
+///  - force it off in debug with
+///    `--dart-define=spyglass.diagnosticsMode=false`;
+///  - and because it's `const`, whichever branch ends up unreachable is
+///    removed entirely by tree shaking - disabled diagnostics tracking
+///    costs nothing in the built app.
+const bool spyglassDiagnosticsMode = bool.fromEnvironment(
+  'spyglass.diagnosticsMode',
+  defaultValue: _kIsDebugBuild,
+);
 
 /// A box that contains dependencies. Deps can also form a tree-like hierarchy
 /// to allow for scoping and overriding dependencies. Reading values from
@@ -263,18 +57,29 @@ class Deps extends EventNotifier<DepsEvent> {
   Deps._({
     required this.parent,
     Map<Object, ManagedDependency>? values,
+    this.debugLabel,
   }) : _values = {...?values} {
     _setupParentSubscription();
+    if (spyglassDiagnosticsMode) {
+      parent?._children.add(this);
+    }
   }
 
   /// Creates a completely empty [Deps], detached from the [globalDeps] root
   /// ancestor.
-  Deps.detached() : this._(parent: null);
+  Deps.detached({String? debugLabel})
+      : this._(parent: null, debugLabel: debugLabel);
 
   /// The root [Deps] instance. This is the ancestor of all other [Deps].
   /// Most likely this is the same as [globalDeps] unless you're using
   /// [Deps.runZoned].
   static final root = Deps.detached();
+
+  /// A label to help identify this scope in logs, error messages, and
+  /// diagnostics - e.g. flutter_spyglass's diagnostics extensions, which
+  /// prefer it over this scope's identity hash when set. Purely cosmetic;
+  /// has no effect on lookup, scoping, or anything else.
+  final String? debugLabel;
 
   void _setupParentSubscription() {
     _parentSubscription =
@@ -291,7 +96,8 @@ class Deps extends EventNotifier<DepsEvent> {
   }
 
   /// Creates a child scope of this [Deps].
-  Deps fork() => Deps._(parent: this);
+  Deps fork({String? debugLabel}) =>
+      Deps._(parent: this, debugLabel: debugLabel);
 
   /// Run the given [body] in a new [Zone] with this [Deps]
   /// as [globalDeps].
@@ -309,7 +115,46 @@ class Deps extends EventNotifier<DepsEvent> {
   StreamSubscription<void>? _parentSubscription;
   bool _isDisposed = false;
 
+  @override
+  String toString() {
+    if (debugLabel case final label?) {
+      return "Deps('$label')";
+    }
+    return isRoot ? 'Deps(root)' : 'Deps(#${identityHashCode(this)})';
+  }
+
+  /// Whether [dispose] has already been called on this scope.
+  bool get isDisposed => _isDisposed;
+
   final Map<Object, ManagedDependency> _values;
+
+  /// Live child scopes created via [fork] - only tracked when
+  /// [spyglassDiagnosticsMode] is enabled, so this is otherwise always
+  /// empty. See [debugChildren].
+  final Set<Deps> _children = {};
+
+  /// Snapshot of this scope's direct child scopes created via [fork] that
+  /// are still alive - for inspection/diagnostics only, e.g.
+  /// flutter_spyglass's diagnostics extensions. Requires
+  /// [spyglassDiagnosticsMode] to be enabled; otherwise always empty. See
+  /// also [scopeChain] to walk upward (ancestors) instead.
+  Iterable<Deps> get debugChildren => List.unmodifiable(_children);
+
+  /// Snapshot of the dependencies registered directly in this scope (not
+  /// its ancestors - see [ownEntries]/[getAllEntries]), together with
+  /// their current resolution state and whether each was registered
+  /// standalone or as part of a group like a [Module] - for
+  /// inspection/diagnostics only. Always available regardless of
+  /// [spyglassDiagnosticsMode], since it only reflects state this scope
+  /// already keeps.
+  Iterable<DependencyDiagnostics> get debugOwnDependencies =>
+      _values.values.map(
+        (managed) => DependencyDiagnostics(
+          dependency: managed.dependency,
+          value: managed.currentValue,
+          origin: managed.origin,
+        ),
+      );
 
   void _checkNotDisposed() {
     if (_isDisposed) {
@@ -359,11 +204,12 @@ class Deps extends EventNotifier<DepsEvent> {
     ];
     for (final dependency in registerable.dependencies) {
       final existing = _values[dependency.key];
-      if (existing != null && existing.dependency.cacheKey == dependency.cacheKey) {
+      if (existing != null &&
+          existing.dependency.cacheKey == dependency.cacheKey) {
         continue;
       }
 
-      final managed = dependency._toManaged(this);
+      final managed = dependency.toManaged(this, registerable);
 
       remove(managed.key);
       _values[managed.key] = managed;
@@ -404,21 +250,46 @@ class Deps extends EventNotifier<DepsEvent> {
     return add(dependency);
   }
 
-  /// Remove the dependency under the specified key.
+  /// Remove the dependency under the specified key - or, for a
+  /// [Registerable] (a [Module] or a [Dependency]), every dependency it
+  /// describes, as a single unit.
   ///
-  /// Note: This method might not always be invoked with the generic parameter,
-  /// so the type/key can also be specified as a parameter.
+  /// [keyOrRegisterable] can be:
+  ///  - omitted, to remove the dependency registered under [T];
+  ///  - a [Type], to remove the dependency registered under that type
+  ///    without needing the generic parameter - e.g. `deps.remove(Foo)`;
+  ///  - a [Registerable], to remove every dependency it groups - e.g.
+  ///    `deps.remove(myModule)` removes every dependency that module lists.
+  ///    This doesn't require holding onto the [Unregister] callback
+  ///    returned by [add]/[addAll]: any [Registerable] describing the same
+  ///    dependency types removes the same keys, since dependencies are
+  ///    looked up by type, not by the identity of the [Registerable] that
+  ///    originally registered them.
   ///
   /// A no-op once this [Deps] has been disposed - same as removing a key
   /// that was never registered - rather than throwing, since callers doing
   /// their own cleanup (e.g. a widget's unmount effect calling an
   /// [Unregister] callback) shouldn't have to carefully order that against
   /// [dispose] to avoid a crash.
-  void remove<T extends Object>([Type? key]) {
+  void remove<T extends Object>([Object? keyOrRegisterable]) {
     if (_isDisposed) {
       return;
     }
-    final effectiveKey = key ?? T;
+    if (keyOrRegisterable is Registerable) {
+      for (final dependency in keyOrRegisterable.dependencies) {
+        remove<Object>(dependency.key);
+      }
+      return;
+    }
+    if (keyOrRegisterable != null && keyOrRegisterable is! Type) {
+      throw ArgumentError.value(
+        keyOrRegisterable,
+        'keyOrRegisterable',
+        'must be a Type, a Registerable (e.g. a Module or Dependency), or '
+            'omitted',
+      );
+    }
+    final effectiveKey = (keyOrRegisterable as Type?) ?? T;
     final value = _values.remove(effectiveKey);
     unawaited(Future.sync(() => value?.dispose()));
     if (value != null) {
@@ -501,7 +372,7 @@ class Deps extends EventNotifier<DepsEvent> {
   /// registered or because it's registered but hasn't been resolved yet.
   /// Unlike [get] and [tryGet], this never triggers creation.
   T? peek<T extends Object>([DependencyKey? key]) =>
-      _tryGetDependency<T>(key)?._currentValue;
+      _tryGetDependency<T>(key)?.currentValue;
 
   T? _tryResolveValue<T extends Object>([DependencyKey? key]) {
     final dependency = _tryGetDependency<T>(key);
@@ -512,7 +383,7 @@ class Deps extends EventNotifier<DepsEvent> {
   /// [effectiveKey] might have appeared, been replaced, or moved - i.e.
   /// registration events, not internal state changes. These are rare
   /// compared to state changes, so it's fine for every subscriber of
-  /// [track]/[trackInstance] to filter this shared stream individually.
+  /// [watch]/[watchInstance] to filter this shared stream individually.
   Stream<void> _registrations(DependencyKey effectiveKey) async* {
     yield null;
     await for (final event in events) {
@@ -527,17 +398,17 @@ class Deps extends EventNotifier<DepsEvent> {
     }
   }
 
-  /// Track a dependency's registration only - for watching multiple
-  /// dependencies at once see extensions [track2], [track3] etc. Emits
+  /// Watch a dependency's registration only - for watching multiple
+  /// dependencies at once see extensions [watch2], [watch3] etc. Emits
   /// whenever the dependency itself is (re-)registered, i.e. when
   /// [Deps.add] or [Deps.replace] installs a new value under this key - but
   /// NOT when a value that happens to be a `ChangeNotifier`/`Listenable`
-  /// fires its own internal notifications. See [track] for that.
+  /// fires its own internal notifications. See [watch] for that.
   ///
-  /// Cheaper than [track] when you only care which instance is currently
+  /// Cheaper than [watch] when you only care which instance is currently
   /// registered, not what it's internally doing - e.g. watching which auth
   /// service is active without rebuilding on its every internal tick.
-  Stream<T> trackInstance<T extends Object>({DependencyKey? key}) {
+  Stream<T> watchInstance<T extends Object>({DependencyKey? key}) {
     final effectiveKey = key ?? T;
     return _detach(_registrations(effectiveKey).expand((_) sync* {
       final value = _tryResolveValue<T>(key);
@@ -547,20 +418,20 @@ class Deps extends EventNotifier<DepsEvent> {
     }));
   }
 
-  /// Track a dependency fully. Emits both when the dependency is
-  /// (re-)registered (see [trackInstance]) AND whenever the resolved
-  /// value's [DependencyObserver] (see [Dependency.createObserver]) reports
+  /// Watch a dependency fully. Emits both when the dependency is
+  /// (re-)registered (see [watchInstance]) AND whenever the resolved
+  /// value's `DependencyObserver` (see [Dependency.createObserver]) reports
   /// an internal state change - e.g. a wrapped `ChangeNotifier`/`Listenable`
   /// firing its own notifications. Internal state changes are delivered by
   /// subscribing directly to the backing [ManagedDependency]'s own stream
   /// (shared by every subscriber of this key), not by broadcasting through
   /// every dependency's shared event stream - so watching this key doesn't
   /// cost anything when an unrelated dependency's state changes.
-  Stream<T> track<T extends Object>({DependencyKey? key}) {
+  Stream<T> watch<T extends Object>({DependencyKey? key}) {
     final effectiveKey = key ?? T;
     return _switchToLatest(_registrations(effectiveKey), () {
       final managed = _tryGetDependency<T>(key);
-      return (managed, managed?.track());
+      return (managed, managed?.watch());
     });
   }
 
@@ -581,8 +452,8 @@ class Deps extends EventNotifier<DepsEvent> {
     StreamSubscription<T>? sourceSub;
 
     controller = StreamController<T>.broadcast(
-      onListen: () =>
-          sourceSub = source.listen(controller.add, onError: controller.addError),
+      onListen: () => sourceSub =
+          source.listen(controller.add, onError: controller.addError),
       onCancel: () {
         unawaited(sourceSub?.cancel());
         unawaited(controller.close());
@@ -617,7 +488,7 @@ class Deps extends EventNotifier<DepsEvent> {
         // underlying value becoming available - e.g. a lazily-created
         // dependency's first resolution fires both DependencyRegistered and
         // DependencyChanged. Resolving to the same identity twice means
-        // nothing actually changed, so skip re-subscribing - a `track()`
+        // nothing actually changed, so skip re-subscribing - a `watch()`
         // BehaviorSubject replays its current value to every fresh
         // subscriber, so a redundant resubscribe here would double-deliver.
         return;
@@ -667,6 +538,9 @@ class Deps extends EventNotifier<DepsEvent> {
   Future<void> dispose() {
     _isDisposed = true;
     _parentSubscription?.cancel();
+    if (spyglassDiagnosticsMode) {
+      parent?._children.remove(this);
+    }
     for (final value in _values.values) {
       unawaited(value.dispose());
     }
@@ -674,30 +548,30 @@ class Deps extends EventNotifier<DepsEvent> {
   }
 }
 
-extension DepsTrackMany on Deps {
-  /// Combines the latest [trackInstance] value of each of [types]. Uses
-  /// [trackInstance], not [track] - each type's own internal state
+extension DepsWatchMany on Deps {
+  /// Combines the latest [watchInstance] value of each of [types]. Uses
+  /// [watchInstance], not [watch] - each type's own internal state
   /// changes are ignored, only registration-level changes are combined.
   /// This is what powers [Dependency.observe]/[Dependency.update] for
   /// computed dependencies: a computed value recomputes when an upstream
   /// dependency is replaced, not on every tick of an upstream
   /// `ChangeNotifier`.
-  Stream<List<Object>> trackMany(List<Type> types) => Rx.combineLatest(
-        types.map((type) => trackInstance(key: type)),
+  Stream<List<Object>> watchMany(List<Type> types) => Rx.combineLatest(
+        types.map((type) => watchInstance(key: type)),
         (values) => values,
       );
 
-  Stream<(A, B)> track2<A, B>() =>
-      trackMany([A, B]).map((list) => (list[0] as A, list[1] as B));
+  Stream<(A, B)> watch2<A, B>() =>
+      watchMany([A, B]).map((list) => (list[0] as A, list[1] as B));
 
-  Stream<(A, B, C)> track3<A, B, C>() => trackMany([A, B, C])
+  Stream<(A, B, C)> watch3<A, B, C>() => watchMany([A, B, C])
       .map((list) => (list[0] as A, list[1] as B, list[2] as C));
 
-  Stream<(A, B, C, D)> track4<A, B, C, D>() => trackMany([A, B, C, D])
+  Stream<(A, B, C, D)> watch4<A, B, C, D>() => watchMany([A, B, C, D])
       .map((list) => (list[0] as A, list[1] as B, list[2] as C, list[3] as D));
 
-  Stream<(A, B, C, D, E)> track5<A, B, C, D, E>() =>
-      trackMany([A, B, C, D, E]).map(
+  Stream<(A, B, C, D, E)> watch5<A, B, C, D, E>() =>
+      watchMany([A, B, C, D, E]).map(
         (list) => (
           list[0] as A,
           list[1] as B,
@@ -706,176 +580,4 @@ extension DepsTrackMany on Deps {
           list[4] as E
         ),
       );
-}
-
-/// This class helps manage lifecycle of a single dependency. It is tightly
-/// coupled with [Deps]. It's an internal structure and it should never be
-/// exposed as part of the public API.
-@internal
-class ManagedDependency<T extends Object> {
-  ManagedDependency(this.dependency, this.deps);
-
-  final Dependency<T> dependency;
-  final Deps deps;
-
-  DependencyKey get key => dependency.key;
-
-  /// This dependency's own value stream, shared by every subscriber that
-  /// tracks this key with [Deps.track] - see also [track] below. Created
-  /// lazily, on the first call to [track], so a dependency that's only ever
-  /// plain-read via [Deps.get] - the common "just a service locator" case -
-  /// never pays for a [DependencyObserver] or a [BehaviorSubject] it doesn't
-  /// need.
-  BehaviorSubject<T>? _controller;
-  StreamSubscription<void>? _observeSubscription;
-  T? _currentValue;
-
-  /// One observer for the current [_currentValue], not one per subscriber -
-  /// see [DependencyObserver]. Only created once [track] has been called at
-  /// least once (see [_controller]); recreated whenever [_currentValue]
-  /// itself is replaced (either by re-registration or by the
-  /// [Dependency.update] chain below).
-  DependencyObserver<T>? _stateObserver;
-  bool _debugCreateCalled = false;
-  bool _isDisposed = false;
-
-  /// No-op unless [track] has already been called at least once for this
-  /// dependency - see [_controller].
-  void _attachStateObserverIfTracked(T value) {
-    final controller = _controller;
-    if (controller == null) {
-      return;
-    }
-    _stateObserver = dependency.createObserver(value)
-      ?..attach(() => controller.add(value));
-  }
-
-  void _ensureInitialized() {
-    if (_isDisposed) {
-      throw DepsDisposedException(key: key);
-    }
-    if (_currentValue != null) {
-      return;
-    }
-    if (_debugCreateCalled) {
-      throw DependencyCycleException(key);
-    }
-    _debugCreateCalled = true;
-    _currentValue = dependency.create(deps);
-    // reason: ManagedDependency and Deps work in tandem
-    // ignore: invalid_use_of_protected_member
-    deps.notify(DependencyChanged(key: key));
-
-    if ((dependency.observe, dependency.update)
-        case (final observe?, final update?)) {
-      unawaited(_observeSubscription?.cancel());
-      _observeSubscription = deps
-          .trackMany(observe)
-          .map((_) => update(deps, _currentValue!))
-          .listen((newValue) {
-        if (_isDisposed) {
-          return;
-        }
-        if (newValue != _currentValue) {
-          final oldObserver = _stateObserver;
-          _currentValue = newValue;
-          _stateObserver = null;
-          unawaited(oldObserver?.dispose());
-          _attachStateObserverIfTracked(newValue);
-          _controller?.add(newValue);
-          // reason: ManagedDependency and Deps work in tandem
-          // ignore: invalid_use_of_protected_member
-          deps.notify(DependencyChanged(key: key));
-        }
-      });
-    }
-  }
-
-  T resolve() {
-    _ensureInitialized();
-    return switch (_currentValue) {
-      final T value => value,
-      null => throw StateError('Initialization error. This is a bug.'),
-    };
-  }
-
-  T? tryResolve() {
-    _ensureInitialized();
-    return _currentValue;
-  }
-
-  Stream<T> track() {
-    _ensureInitialized();
-    var controller = _controller;
-    if (controller == null) {
-      controller = _controller = BehaviorSubject<T>();
-      _attachStateObserverIfTracked(_currentValue!);
-      controller.add(_currentValue!);
-    }
-    return controller.stream;
-  }
-
-  Future<void> dispose() async {
-    if (_isDisposed) {
-      return;
-    }
-    _isDisposed = true;
-    await _observeSubscription?.cancel();
-    await _controller?.close();
-    await _stateObserver?.dispose();
-    if ((dependency.dispose, _currentValue)
-        case (final dispose?, final value?)) {
-      final resolvedValue = value;
-      await dispose(resolvedValue);
-    }
-  }
-}
-
-/// Observes internal state changes of an already-resolved dependency value -
-/// e.g. a wrapped `ChangeNotifier`/`Listenable` firing its own notifications
-/// - as opposed to the value itself being replaced. See
-/// [Dependency.createObserver].
-///
-/// The framework creates and disposes exactly one observer per resolved
-/// value, not one per subscriber to [Deps.track]; call [notifyStateChanged]
-/// whenever the observed value's state changes and every current
-/// [Deps.track] subscriber for this key is notified.
-abstract class DependencyObserver<T extends Object> {
-  void Function()? _onChanged;
-
-  /// Wires this observer up to its owning [ManagedDependency]. Called by the
-  /// framework right after construction - implementers should not call this.
-  @internal
-  void attach(void Function() onChanged) {
-    _onChanged = onChanged;
-  }
-
-  /// Call this whenever the observed value's internal state changes, to
-  /// notify anyone tracking this dependency via [Deps.track] - without
-  /// needing to know about [Deps] or [ManagedDependency] directly.
-  @protected
-  void notifyStateChanged() {
-    _onChanged?.call();
-  }
-
-  Future<void> dispose();
-}
-
-class Module implements Registerable {
-  Module(
-    this.dependencies, {
-    this.debugLabel,
-  });
-
-  @override
-  final List<Dependency<Object>> dependencies;
-
-  final String? debugLabel;
-
-  @override
-  String toString() => "Module('$debugLabel')";
-}
-
-abstract class Registerable {
-  Iterable<Dependency<Object>> get dependencies;
 }

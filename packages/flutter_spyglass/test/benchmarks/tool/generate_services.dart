@@ -66,7 +66,7 @@ void main() {
     ..writeln('final List<Widget Function(BuildContext)> spyglassReaders = [');
   for (var i = 0; i < serviceCount; i++) {
     buffer.writeln(
-      '  (c) { buildCounts[$i]++; return Text(c.track<Svc$i>().value.toString()); },',
+      '  (c) { buildCounts[$i]++; return Text(DepsContext(c).watch<Svc$i>().value.toString()); },',
     );
   }
 
@@ -96,7 +96,7 @@ void main() {
     ..writeln('final List<Widget Function(BuildContext)> providerReaders = [');
   for (var i = 0; i < serviceCount; i++) {
     buffer.writeln(
-      '  (c) { buildCounts[$i]++; return Text(c.watch<Svc$i>().value.toString()); },',
+      '  (c) { buildCounts[$i]++; return Text(WatchContext(c).watch<Svc$i>().value.toString()); },',
     );
   }
 
@@ -107,7 +107,7 @@ void main() {
       'final List<MutableService Function(BuildContext)> providerGetters = [',
     );
   for (var i = 0; i < serviceCount; i++) {
-    buffer.writeln('  (c) => c.read<Svc$i>(),');
+    buffer.writeln('  (c) => ReadContext(c).read<Svc$i>(),');
   }
 
   buffer
@@ -133,7 +133,7 @@ void main() {
     );
   for (var i = 0; i < serviceCount; i++) {
     buffer.writeln(
-      '  (c) { buildCounts[$i]++; return Text(c.read<Svc$i>().value.toString()); },',
+      '  (c) { buildCounts[$i]++; return Text(ReadContext(c).read<Svc$i>().value.toString()); },',
     );
   }
   buffer.writeln('];');

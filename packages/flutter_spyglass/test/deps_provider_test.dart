@@ -23,11 +23,11 @@ void main() {
             children: [
               Builder(builder: (context) {
                 buildsA++;
-                return Text('A:${context.track<CounterA>().value}');
+                return Text('A:${context.watch<CounterA>().value}');
               }),
               Builder(builder: (context) {
                 buildsB++;
-                return Text('B:${context.track<CounterB>().value}');
+                return Text('B:${context.watch<CounterB>().value}');
               }),
             ],
           ),
@@ -59,7 +59,7 @@ void main() {
       ..ensureResolved([Counter]);
 
     Widget watcher(int index) => Builder(builder: (context) {
-          return Text('$index:${context.track<Counter>().value}');
+          return Text('$index:${context.watch<Counter>().value}');
         });
 
     Widget buildTree(bool includeThird) => MaterialApp(
@@ -114,11 +114,11 @@ void main() {
             children: [
               Builder(builder: (context) {
                 trueBuilds++;
-                return Text('true:${context.track<Counter>().value}');
+                return Text('true:${context.watch<Counter>().value}');
               }),
               Builder(builder: (context) {
                 falseBuilds++;
-                return Text('false:${context.trackInstance<Counter>().value}');
+                return Text('false:${context.watchInstance<Counter>().value}');
               }),
             ],
           ),
@@ -177,12 +177,12 @@ void main() {
             children: [
               Builder(builder: (context) {
                 aBuilds++;
-                final a = context.pick<Pair, int>((p) => p.a);
+                final a = context.select<Pair, int>((p) => p.a);
                 return Text('a:$a');
               }),
               Builder(builder: (context) {
                 bBuilds++;
-                final b = context.pick<Pair, int>((p) => p.b);
+                final b = context.select<Pair, int>((p) => p.b);
                 return Text('b:$b');
               }),
             ],
@@ -227,7 +227,7 @@ void main() {
           deps: deps,
           introduceScope: false,
           child: Builder(
-            builder: (context) => Text('${context.track<Counter>().value}'),
+            builder: (context) => Text('${context.watch<Counter>().value}'),
           ),
         ),
       ),

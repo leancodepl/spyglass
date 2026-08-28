@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_provider/data_cubit.dart';
-import 'package:flutter_spyglass/flutter_spyglass.dart';
 import 'package:flutter_spyglass_bloc/flutter_spyglass_bloc.dart';
 
 void main() {
@@ -29,7 +28,7 @@ class MainApp extends StatelessWidget {
                 children: [
                   Builder(
                     builder: (context) {
-                      final state = context.track<DataCubit>().state;
+                      final state = context.watch<DataCubit>().state;
                       final String? stateDescription =
                           switch (state.connectionState) {
                         ConnectionState.none => 'Idle',
