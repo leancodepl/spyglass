@@ -10,6 +10,7 @@ workspace:
   - packages/spyglass
   - packages/flutter_spyglass
   - packages/flutter_spyglass_bloc
+  - packages/flutter_spyglass_hooks
   - examples/*
 
 melos:
