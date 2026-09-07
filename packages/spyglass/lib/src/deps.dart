@@ -328,11 +328,6 @@ class Deps extends EventNotifier<DepsEvent> {
     return null;
   }
 
-  /// {@macro spyglass_deps_get}
-  ///
-  /// Alias for [get].
-  T call<T extends Object>() => get<T>();
-
   /// {@template spyglass_deps_get}
   /// Returns the resolved value of the specified dependency. If the dependency
   /// is not yet initialized, i.e. its [Dependency.create] method has not
@@ -552,10 +547,10 @@ extension DepsWatchMany on Deps {
   /// Combines the latest [watchInstance] value of each of [types]. Uses
   /// [watchInstance], not [watch] - each type's own internal state
   /// changes are ignored, only registration-level changes are combined.
-  /// This is what powers [Dependency.observe]/[Dependency.update] for
-  /// computed dependencies: a computed value recomputes when an upstream
-  /// dependency is replaced, not on every tick of an upstream
-  /// `ChangeNotifier`.
+  /// This is also what powers [Dependency.create] recomputing for computed
+  /// dependencies (via `DepsReader.watchInstance`, internally): a computed
+  /// value recomputes when an upstream dependency is replaced, not on
+  /// every tick of an upstream `ChangeNotifier`.
   Stream<List<Object>> watchMany(List<Type> types) => Rx.combineLatest(
         types.map((type) => watchInstance(key: type)),
         (values) => values,

@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 
 import 'dependency_observer.dart';
 import 'deps.dart';
+import 'deps_reader.dart';
 import 'managed_dependency.dart';
 import 'types.dart';
 
@@ -15,18 +16,12 @@ class Dependency<T extends Object> implements Registerable {
   /// by using [Deps.add].
   const Dependency(
     this.create, {
-    this.observe,
-    this.update,
     this.dispose,
     this.tags,
     this.debugLabel,
     this.cacheKey,
     DependencyObserverFactory<T>? createObserver,
-  })  : createObserverFn = createObserver,
-        assert(
-          observe != null || update == null,
-          'when must be provided if update is provided',
-        );
+  }) : createObserverFn = createObserver;
 
   /// An immutable object describing a dependency. It can be registered in [Deps]
   /// by using [Deps.add].
@@ -40,9 +35,7 @@ class Dependency<T extends Object> implements Registerable {
     this.debugLabel,
     this.cacheKey,
     DependencyObserverFactory<T>? createObserver,
-  })  : create = ((_) => value),
-        observe = null,
-        update = null,
+  })  : create = ((_, __) => value),
         createObserverFn = createObserver;
 
   /// The key or type of the dependency. It is a unique identifier for the
@@ -66,19 +59,25 @@ class Dependency<T extends Object> implements Registerable {
   /// wait for them to be resolved before proceeding.
   final List<Object>? tags;
 
-  /// Creates a new instance of [T]. You can use provided [Deps] to obtain
-  /// required dependencies. This callback can be asynchronous to perform
-  /// long running initialization or await another dependency.
-  final T Function(Deps deps) create;
-
-  /// Updates or creates a new instance of the dependency in reaction to
-  /// changes in other dependencies specified by [observe].
+  /// Creates - or, on a later run, recomputes - this dependency's value.
+  ///
+  /// Called once with `oldValue: null` to produce the first value. There's
+  /// no separate declaration of "what this reacts to": reading another
+  /// dependency through [deps]'s [DepsReader.watchInstance] (instead of the
+  /// untracked [DepsReader.get]) *is* how this declares it, discovered
+  /// fresh on every run - so [create] is called again, this time with the
+  /// previous result as `oldValue`, whenever a key it read via
+  /// [DepsReader.watchInstance] *last* run is re-registered under a new
+  /// instance. Which keys that is can itself depend on `oldValue` and
+  /// change between runs.
+  ///
+  /// A [create] that never reads anything via [DepsReader.watchInstance] is
+  /// simply never called again - the common case of a plain, one-shot
+  /// factory. One that does can either build a fresh [T] from scratch each
+  /// time, or mutate `oldValue` in place and return it - return `oldValue`
+  /// itself unchanged when nothing actually needs to change.
   // ignore: unsafe_variance
-  final T Function(Deps deps, T oldValue)? update;
-
-  /// Use one of [Deps.watchInstance], [DepsWatchMany.watch2] etc. to
-  /// specify which changes you want to observe.
-  final List<DependencyKey>? observe;
+  final T Function(DepsReader deps, T? oldValue) create;
 
   /// Perform actions to clean up after the object is no longer needed.
   // ignore: unsafe_variance, avoid_futureor_void

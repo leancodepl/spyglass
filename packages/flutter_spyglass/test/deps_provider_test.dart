@@ -10,8 +10,8 @@ void main() {
     var buildsB = 0;
 
     final deps = Deps.detached()
-      ..add(ChangeNotifierDependency<CounterA>((_) => CounterA(0)))
-      ..add(ChangeNotifierDependency<CounterB>((_) => CounterB(0)))
+      ..add(ChangeNotifierDependency<CounterA>((_, __) => CounterA(0)))
+      ..add(ChangeNotifierDependency<CounterB>((_, __) => CounterB(0)))
       ..ensureResolved([CounterA, CounterB]);
 
     await tester.pumpWidget(
@@ -55,7 +55,7 @@ void main() {
       'unmounting one shared watcher does not affect the remaining '
       'watchers of the same dependency', (tester) async {
     final deps = Deps.detached()
-      ..add(ChangeNotifierDependency<Counter>((_) => Counter(0)))
+      ..add(ChangeNotifierDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     Widget watcher(int index) => Builder(builder: (context) {
@@ -99,7 +99,7 @@ void main() {
       'the same type can be watched with different observeState values '
       'at once', (tester) async {
     final deps = Deps.detached()
-      ..add(ChangeNotifierDependency<Counter>((_) => Counter(0)))
+      ..add(ChangeNotifierDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     var trueBuilds = 0;
@@ -147,7 +147,7 @@ void main() {
     // add() alone wouldn't do it now: same key, no cacheKey on either side,
     // so add() would leave the existing Counter in place. replace() is the
     // explicit "swap this out" call.
-    deps.replace(ChangeNotifierDependency<Counter>((_) => Counter(100)));
+    deps.replace(ChangeNotifierDependency<Counter>((_, __) => Counter(100)));
     await tester.pumpAndSettle();
 
     expect(trueBuilds, equals(3));
@@ -162,7 +162,7 @@ void main() {
       'multiple selectors on the same dependency rebuild independently',
       (tester) async {
     final deps = Deps.detached()
-      ..add(ChangeNotifierDependency<Pair>((_) => Pair(0, 100)))
+      ..add(ChangeNotifierDependency<Pair>((_, __) => Pair(0, 100)))
       ..ensureResolved([Pair]);
 
     var aBuilds = 0;
@@ -218,7 +218,7 @@ void main() {
       'mutating a dependency after its watcher unmounted does not throw',
       (tester) async {
     final deps = Deps.detached()
-      ..add(ChangeNotifierDependency<Counter>((_) => Counter(0)))
+      ..add(ChangeNotifierDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     await tester.pumpWidget(
@@ -252,7 +252,7 @@ void main() {
             deps: deps,
             introduceScope: false,
             register: [
-              Dependency<Marker>((_) => Marker(instanceId)),
+              Dependency<Marker>((_, __) => Marker(instanceId)),
             ],
             child: const SizedBox(),
           ),
@@ -283,7 +283,7 @@ void main() {
             deps: deps,
             introduceScope: false,
             register: [
-              Dependency<Marker>((_) => Marker(tenantId), cacheKey: tenantId),
+              Dependency<Marker>((_, __) => Marker(tenantId), cacheKey: tenantId),
             ],
             child: const SizedBox(),
           ),
@@ -322,12 +322,12 @@ void main() {
             register: [
               if (includeA)
                 Dependency<MarkerA>(
-                  (_) => MarkerA(),
+                  (_, __) => MarkerA(),
                   dispose: (_) => disposed.add('A'),
                 ),
               if (includeB)
                 Dependency<MarkerB>(
-                  (_) => MarkerB(),
+                  (_, __) => MarkerB(),
                   dispose: (_) => disposed.add('B'),
                 ),
             ],

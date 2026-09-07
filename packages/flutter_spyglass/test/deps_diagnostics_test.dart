@@ -7,7 +7,7 @@ void main() {
     "DepsProvider's internal InheritedWidget surfaces the live scope's "
     'diagnostics tree',
     (tester) async {
-      final deps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+      final deps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
       await tester.pumpWidget(
         DepsProvider(
@@ -58,7 +58,7 @@ void main() {
     'toDiagnosticsNode() shows an unresolved dependency, then resolved '
     'after get()',
     () {
-      final deps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+      final deps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
       expect(
         deps.toDiagnosticsNode().toStringDeep(),
@@ -105,8 +105,8 @@ void main() {
   test('toDiagnosticsNode() flags whether a dependency was registered '
       'standalone or as part of a Module', () {
     final deps = Deps.detached()
-      ..add(Module([Dependency<Bar>((_) => Bar())], debugLabel: 'BarModule'))
-      ..add(Dependency<Foo>((_) => Foo()));
+      ..add(Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'BarModule'))
+      ..add(Dependency<Foo>((_, __) => Foo()));
 
     final tree = deps.toDiagnosticsNode().toStringDeep();
 

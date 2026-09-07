@@ -4,18 +4,19 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter_spyglass/flutter_spyglass.dart';
 
 /// Registers a `Bloc`/`Cubit` as a spyglass [Dependency]. The instance is
-/// closed automatically on disposal, and any widget using
-/// `context.watch<TBloc>()` (or [BlocBuilder]/[BlocListener]/[BlocConsumer])
-/// rebuilds/reacts on every emitted state.
+/// closed automatically on disposal - via [BlocBase.close] - unless [dispose]
+/// is overridden, and any widget using `context.watch<TBloc>()` (or
+/// [BlocBuilder]/[BlocListener]/[BlocConsumer]) rebuilds/reacts on every
+/// emitted state.
 class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
   const BlocDependency(
     super.create, {
     super.debugLabel,
-    super.dispose,
-    super.observe,
     super.tags,
-    super.update,
-  });
+    FutureOr<void> Function(TBloc value)? dispose,
+  }) : super(dispose: dispose ?? _dispose);
+
+  static Future<void> _dispose(BlocBase value) => value.close();
 
   @override
   DependencyObserver<TBloc> createObserver(TBloc value) {

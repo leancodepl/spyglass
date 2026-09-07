@@ -53,3 +53,18 @@ implementation of Spyglass packages.
 ## Extras
 
 - Write AI skills for migrating from provider to flutter_spyglass
+
+## Issues with provider
+
+- No option to register services before Flutter app starts/outside of widget
+  tree.
+- 2 widgets per provided service makes widget tree very deep - (used to) be an
+  issue with Flutter.
+
+## Issues with get_it
+
+- Scoping works only on a global level.
+- Factories with parameters are unsafe.
+- No observability out of the box.
+- (Subjective) watch_it has unpleasant API.
+- flutter_it proposes an entire state management framework.

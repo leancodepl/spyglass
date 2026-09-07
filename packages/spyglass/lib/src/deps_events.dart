@@ -36,7 +36,7 @@ final class DependencyUnregistered extends Equatable implements DepsEvent {
 }
 
 /// Event emitted by `Deps` when a dependency value is changed, i.e.
-/// as a result of the `Dependency.create` or `Dependency.update` callback.
+/// as a result of the `Dependency.create` callback (re-)running.
 final class DependencyChanged extends Equatable implements DepsEvent {
   const DependencyChanged({
     required this.key,

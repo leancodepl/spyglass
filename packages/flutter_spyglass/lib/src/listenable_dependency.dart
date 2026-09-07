@@ -8,9 +8,7 @@ class ListenableDependency<T extends Listenable> extends Dependency<T> {
     super.create, {
     super.debugLabel,
     super.dispose,
-    super.observe,
     super.tags,
-    super.update,
   });
 
   @override
@@ -38,9 +36,7 @@ class ChangeNotifierDependency<T extends ChangeNotifier>
   const ChangeNotifierDependency(
     super.create, {
     super.debugLabel,
-    super.observe,
     super.tags,
-    super.update,
     FutureOr<void> Function(T value)? dispose,
   }) : super(dispose: dispose ?? _dispose);
 

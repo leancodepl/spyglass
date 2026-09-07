@@ -4,46 +4,138 @@ import 'package:test/test.dart';
 void main() {
   test('instant', () {
     deps
-      ..add(Dependency<Bar>((deps) => Bar()))
-      ..add(Dependency<Foo>((deps) => Foo(bar: deps.get())));
+      ..add(Dependency<Bar>((deps, _) => Bar()))
+      ..add(Dependency<Foo>((deps, _) => Foo(bar: deps.get())));
 
     expect(() => deps.get<Foo>(), returnsNormally);
   });
 
-  test('observe mutable', () async {
-    deps
-      ..add(Dependency((deps) => Baz(label: 'first')))
+  test('create mutates the old value in place when a tracked key changes',
+      () async {
+    final scopeDeps = Deps.detached()
+      ..add(Dependency((deps, _) => Baz(label: 'first')))
       ..add(
-        Dependency(
-          (_) => Qux(baz: deps.get()),
-          observe: const [Baz],
-          update: (deps, oldValue) => oldValue..baz = deps.get(),
-        ),
-      );
+        Dependency<Qux>((deps, oldValue) {
+          final baz = deps.watchInstance<Baz>();
+          return oldValue == null ? Qux(baz: baz) : (oldValue..baz = baz);
+        }),
+      )
+      // Force resolution now, so the assertion below genuinely exercises
+      // create() reacting to a later change - not just its first run
+      // picking up an already-replaced Baz on first (lazy) resolution.
+      ..get<Qux>();
 
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(Duration.zero);
 
-    deps.replace(Dependency.value(Baz(label: 'second')));
+    scopeDeps.replace(Dependency.value(Baz(label: 'second')));
+    await Future<void>.delayed(Duration.zero);
 
-    expect(deps.get<Qux>().label, equals('second'));
+    expect(scopeDeps.get<Qux>().label, equals('second'));
   });
 
-  test('observe immutable', () async {
-    deps
-      ..add(Dependency((deps) => Baz(label: 'first')))
+  test('create returns a fresh value when a tracked key changes', () async {
+    final scopeDeps = Deps.detached()
+      ..add(Dependency((deps, _) => Baz(label: 'first')))
+      ..add(Dependency<Qux>((deps, _) => Qux(baz: deps.watchInstance())))
+      ..get<Qux>();
+
+    await Future<void>.delayed(Duration.zero);
+
+    scopeDeps.replace(Dependency.value(Baz(label: 'second')));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(scopeDeps.get<Qux>().label, equals('second'));
+  });
+
+  test('create never re-runs when it only reads through get(), not '
+      'watchInstance()', () async {
+    var createCalls = 0;
+    final scopeDeps = Deps.detached()
+      ..add(Dependency((deps, _) => Baz(label: 'first')))
       ..add(
-        Dependency(
-          (_) => Qux(baz: deps.get()),
-          observe: const [Baz],
-          update: (deps, oldValue) => Qux(baz: deps.get()),
+        Dependency<Qux>((deps, oldValue) {
+          createCalls++;
+          final baz = deps.get<Baz>();
+          return oldValue == null ? Qux(baz: baz) : (oldValue..baz = baz);
+        }),
+      )
+      ..get<Qux>();
+
+    await Future<void>.delayed(Duration.zero);
+    expect(createCalls, equals(1)); // the initial run only
+
+    scopeDeps.replace(Dependency.value(Baz(label: 'second')));
+    await Future<void>.delayed(Duration.zero);
+
+    expect(createCalls, equals(1));
+    expect(scopeDeps.get<Qux>().label, equals('first'));
+  });
+
+  test('create only reacts to the keys it actually reads this run - '
+      'unread keys are ignored even though they change', () async {
+    final scopeDeps = Deps.detached()
+      ..add(Dependency((_, __) => Corge('corge-1')))
+      ..add(Dependency((_, __) => Grault('grault-1')))
+      ..add(
+        Dependency<Waldo>(
+          // Only ever reads Corge - Grault is never tracked.
+          (deps, _) => Waldo(label: deps.watchInstance<Corge>().label),
         ),
       );
 
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('corge-1'));
 
-    deps.replace(Dependency.value(Baz(label: 'second')));
+    // Not tracked - should be silently ignored.
+    scopeDeps.replace(Dependency.value(Grault('grault-2')));
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('corge-1'));
 
-    expect(deps.get<Qux>().label, equals('second'));
+    // Tracked - should propagate.
+    scopeDeps.replace(Dependency.value(Corge('corge-2')));
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('corge-2'));
+  });
+
+  test('create adjusts its subscription when the keys it reads change '
+      'between runs', () async {
+    // An external toggle, flipped mid-test, standing in for create's logic
+    // taking a different branch (e.g. based on oldValue) on a later run.
+    var useCorge = true;
+
+    final scopeDeps = Deps.detached()
+      ..add(Dependency((_, __) => Corge('corge-1')))
+      ..add(Dependency((_, __) => Grault('grault-1')))
+      ..add(
+        Dependency<Waldo>(
+          (deps, _) => Waldo(
+            label: useCorge
+                ? deps.watchInstance<Corge>().label
+                : deps.watchInstance<Grault>().label,
+          ),
+        ),
+      );
+
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('corge-1'));
+
+    // Flip the branch, then force a re-run via the key still tracked from
+    // the last run (Corge) - this run should read Grault instead, and
+    // re-subscribe to track Grault, not Corge, from now on.
+    useCorge = false;
+    scopeDeps.replace(Dependency.value(Corge('corge-2')));
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('grault-1'));
+
+    // No longer tracked - should be silently ignored.
+    scopeDeps.replace(Dependency.value(Corge('corge-3')));
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('grault-1'));
+
+    // Tracked now instead.
+    scopeDeps.replace(Dependency.value(Grault('grault-2')));
+    await Future<void>.delayed(Duration.zero);
+    expect(scopeDeps.get<Waldo>().label, equals('grault-2'));
   });
 
   test('createObserver is only called once something actually watches',
@@ -54,7 +146,7 @@ void main() {
     final scopeDeps = Deps.detached()
       ..add(
         Dependency<Bar>(
-          (_) => Bar(),
+          (_, __) => Bar(),
           createObserver: (value) {
             createObserverCalls++;
             return _TrackingObserver(onDispose: () => disposeCalls++);
@@ -87,7 +179,7 @@ void main() {
     final scopeDeps = Deps.detached()
       ..add(
         Dependency<Bar>(
-          (_) => Bar(),
+          (_, __) => Bar(),
           createObserver: (value) {
             createObserverCalls++;
             return _TrackingObserver(onDispose: () {});
@@ -114,7 +206,7 @@ void main() {
     final scopeDeps = Deps.detached()
       ..add(
         Dependency<Bar>(
-          (_) => Bar(),
+          (_, __) => Bar(),
           createObserver: (value) {
             createObserverCalls++;
             return _TrackingObserver(onDispose: () {});
@@ -136,7 +228,7 @@ void main() {
   test('watch() switches to a newly re-registered '
       'instance and stops reacting to the old one', () async {
     Dependency<Counter> makeCounter(int value) => Dependency<Counter>(
-          (_) => Counter(value),
+          (_, __) => Counter(value),
           createObserver: _CounterObserver.new,
         );
 
@@ -172,7 +264,7 @@ void main() {
     final disposedLabels = <String>[];
     Dependency<Counter> makeCounter(String label, int value) =>
         Dependency<Counter>(
-          (_) => Counter(value),
+          (_, __) => Counter(value),
           createObserver: (c) =>
               _CounterObserver(c, onDispose: () => disposedLabels.add(label)),
         );
@@ -194,7 +286,7 @@ void main() {
   });
 
   test('get() throws after Deps.dispose()', () async {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
     expect(scopeDeps.get<Bar>(), isA<Bar>());
 
     await scopeDeps.dispose();
@@ -207,11 +299,11 @@ void main() {
 
   test('add() throws after Deps.dispose(), but remove() is a no-op',
       () async {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
     await scopeDeps.dispose();
 
     expect(
-      () => scopeDeps.add(Dependency<Foo>((_) => Foo(bar: Bar()))),
+      () => scopeDeps.add(Dependency<Foo>((_, __) => Foo(bar: Bar()))),
       throwsA(isA<DepsDisposedException>()),
     );
     expect(() => scopeDeps.remove<Bar>(), returnsNormally);
@@ -231,7 +323,7 @@ void main() {
   test('peek() returns the current value without triggering creation', () {
     var created = false;
     final scopeDeps = Deps.detached()
-      ..add(Dependency<Bar>((_) {
+      ..add(Dependency<Bar>((_, __) {
         created = true;
         return Bar();
       }));
@@ -266,7 +358,7 @@ void main() {
 
   test('debugOwnDependencies reports registration and resolution state, '
       'regardless of spyglassDiagnosticsMode', () {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
     final beforeResolve = scopeDeps.debugOwnDependencies.single;
     expect(beforeResolve.key, equals(Bar));
@@ -302,7 +394,7 @@ void main() {
   test('DependencyCycleException is thrown for a self-referential create()',
       () {
     final scopeDeps = Deps.detached()
-      ..add(Dependency<Bar>((deps) {
+      ..add(Dependency<Bar>((deps, _) {
         deps.get<Bar>();
         return Bar();
       }));
@@ -315,34 +407,34 @@ void main() {
 
   test('add() leaves the existing value in place when cacheKey matches '
       '(including both being null), and replaces when it differs', () {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
     final first = scopeDeps.get<Bar>();
 
     // No cacheKey on either side - null == null - left alone.
-    scopeDeps.add(Dependency<Bar>((_) => Bar()));
+    scopeDeps.add(Dependency<Bar>((_, __) => Bar()));
     expect(scopeDeps.get<Bar>(), same(first));
 
     // Newly-specified, non-null cacheKey differs from the existing null -
     // replaced.
-    scopeDeps.add(Dependency<Bar>((_) => Bar(), cacheKey: 'v1'));
+    scopeDeps.add(Dependency<Bar>((_, __) => Bar(), cacheKey: 'v1'));
     final second = scopeDeps.get<Bar>();
     expect(second, isNot(same(first)));
 
     // Same cacheKey as what's already there - left alone.
-    scopeDeps.add(Dependency<Bar>((_) => Bar(), cacheKey: 'v1'));
+    scopeDeps.add(Dependency<Bar>((_, __) => Bar(), cacheKey: 'v1'));
     expect(scopeDeps.get<Bar>(), same(second));
 
     // Different cacheKey - replaced.
-    scopeDeps.add(Dependency<Bar>((_) => Bar(), cacheKey: 'v2'));
+    scopeDeps.add(Dependency<Bar>((_, __) => Bar(), cacheKey: 'v2'));
     expect(scopeDeps.get<Bar>(), isNot(same(second)));
   });
 
   test('replace() always replaces, even when cacheKey matches', () {
     final scopeDeps = Deps.detached()
-      ..add(Dependency<Bar>((_) => Bar(), cacheKey: 'v1'));
+      ..add(Dependency<Bar>((_, __) => Bar(), cacheKey: 'v1'));
     final first = scopeDeps.get<Bar>();
 
-    scopeDeps.replace(Dependency<Bar>((_) => Bar(), cacheKey: 'v1'));
+    scopeDeps.replace(Dependency<Bar>((_, __) => Bar(), cacheKey: 'v1'));
 
     expect(scopeDeps.get<Bar>(), isNot(same(first)));
   });
@@ -350,8 +442,8 @@ void main() {
   test('remove() accepts a Module and removes every dependency it groups',
       () {
     final module = Module([
-      Dependency<Bar>((_) => Bar()),
-      Dependency<Foo>((deps) => Foo(bar: deps.get())),
+      Dependency<Bar>((_, __) => Bar()),
+      Dependency<Foo>((deps, _) => Foo(bar: deps.get())),
     ]);
     final scopeDeps = Deps.detached()..add(module);
 
@@ -367,8 +459,8 @@ void main() {
   test('remove() accepts a Registerable describing the same dependency '
       'types, without needing the exact original instance', () {
     Module makeModule() => Module([
-          Dependency<Bar>((_) => Bar()),
-          Dependency<Foo>((deps) => Foo(bar: deps.get())),
+          Dependency<Bar>((_, __) => Bar()),
+          Dependency<Foo>((deps, _) => Foo(bar: deps.get())),
         ]);
     final scopeDeps = Deps.detached()
       ..add(makeModule())
@@ -382,7 +474,7 @@ void main() {
 
   test('remove() accepts a plain Dependency, equivalent to removing its key',
       () {
-    final dependency = Dependency<Bar>((_) => Bar());
+    final dependency = Dependency<Bar>((_, __) => Bar());
     final scopeDeps = Deps.detached()
       ..add(dependency)
       ..remove(dependency);
@@ -392,7 +484,7 @@ void main() {
 
   test('remove() throws ArgumentError for a value that is neither a Type '
       'nor a Registerable', () {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_) => Bar()));
+    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
     expect(
       () => scopeDeps.remove(42),
@@ -401,10 +493,11 @@ void main() {
   });
 
   test('debugOwnDependencies reports isStandalone and module correctly', () {
-    final module = Module([Dependency<Bar>((_) => Bar())], debugLabel: 'M');
+    final module =
+        Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'M');
     final scopeDeps = Deps.detached()
       ..add(module)
-      ..add(Dependency<Foo>((deps) => Foo(bar: deps.get())));
+      ..add(Dependency<Foo>((deps, _) => Foo(bar: deps.get())));
 
     final byKey = {
       for (final entry in scopeDeps.debugOwnDependencies) entry.key: entry,
@@ -488,4 +581,22 @@ class Qux {
   Baz baz;
 
   String get label => baz.label;
+}
+
+class Corge {
+  Corge(this.label);
+
+  final String label;
+}
+
+class Grault {
+  Grault(this.label);
+
+  final String label;
+}
+
+class Waldo {
+  Waldo({required this.label});
+
+  final String label;
 }

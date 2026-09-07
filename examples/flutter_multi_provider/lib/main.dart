@@ -14,10 +14,7 @@ class MainApp extends StatelessWidget {
     return DepsProvider(
       register: [
         Dependency.value('Hello World!'),
-        BlocDependency<DataCubit>(
-          (_) => DataCubit(),
-          dispose: (cubit) => cubit.close(),
-        ),
+        BlocDependency<DataCubit>((_, __) => DataCubit()),
       ],
       child: Builder(builder: (context) {
         return MaterialApp(

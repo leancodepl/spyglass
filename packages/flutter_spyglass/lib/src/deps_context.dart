@@ -14,10 +14,6 @@ extension DepsContext on BuildContext {
   /// spyglass equivalent of `context.read<T>()` in `provider`.
   T get<T extends Object>() => deps.get<T>();
 
-  /// Alias for [get] - the spyglass equivalent of `context.read<T>()` in
-  /// `provider`, spelled the same way.
-  T read<T extends Object>() => get<T>();
-
   /// Watch a dependency fully and rebuild the widget on any change - both
   /// when a new instance is registered under this type, and when the
   /// current instance reports an internal state change (e.g. a wrapped

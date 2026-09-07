@@ -16,12 +16,8 @@ class MainApp extends StatelessWidget {
         Dependency<AppLocalizations>.value(
             const AppLocalizations(mainPageGreeting: 'Hello world!')),
         Dependency<MainPageLocalizations>(
-          (_) => MainPageLocalizations(
-            greeting: deps.get<AppLocalizations>().mainPageGreeting,
-          ),
-          observe: const [AppLocalizations],
-          update: (deps, oldValue) => MainPageLocalizations(
-            greeting: deps.get<AppLocalizations>().mainPageGreeting,
+          (deps, _) => MainPageLocalizations(
+            greeting: deps.watchInstance<AppLocalizations>().mainPageGreeting,
           ),
         ),
       ],

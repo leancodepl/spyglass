@@ -21,7 +21,8 @@ void main() {
     ..writeln('const serviceCount = $serviceCount;')
     ..writeln()
     ..writeln('/// Number of times the leaf at index i has rebuilt since the')
-    ..writeln('/// last [resetBuildCounts] call. Used to verify that mutating one')
+    ..writeln(
+        '/// last [resetBuildCounts] call. Used to verify that mutating one')
     ..writeln('/// service only rebuilds the widget(s) observing it.')
     ..writeln('final List<int> buildCounts = List.filled(serviceCount, 0);')
     ..writeln()
@@ -57,7 +58,8 @@ void main() {
       'final List<Dependency<Object> Function(int value)> spyglassFactories = [',
     );
   for (var i = 0; i < serviceCount; i++) {
-    buffer.writeln('  (v) => ChangeNotifierDependency<Svc$i>((_) => Svc$i(v)),');
+    buffer.writeln(
+        '  (v) => ChangeNotifierDependency<Svc$i>((_, __) => Svc$i(v)),');
   }
 
   buffer
@@ -114,7 +116,8 @@ void main() {
     ..writeln('];')
     ..writeln()
     ..writeln('/// Plain, non-reactive reads - never calls observe()/watch(),')
-    ..writeln('/// so on the spyglass side no DependencyObserver/BehaviorSubject')
+    ..writeln(
+        '/// so on the spyglass side no DependencyObserver/BehaviorSubject')
     ..writeln('/// is ever created for these services (see ManagedDependency).')
     ..writeln(
       'final List<Widget Function(BuildContext)> spyglassNonReactiveReaders = [',

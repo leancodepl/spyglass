@@ -12,7 +12,7 @@ void main() {
       'rebuilds with the current state and on every emission by '
       'default', (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     var builds = 0;
@@ -49,7 +49,7 @@ void main() {
   testWidgets('buildWhen controls whether an emission triggers a rebuild',
       (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     var builds = 0;
@@ -94,7 +94,7 @@ void main() {
   testWidgets('an explicit bloc is used instead of the one from Deps',
       (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
     final explicitCounter = Counter(100);
 
@@ -127,7 +127,7 @@ void main() {
   testWidgets('rebuilds against a newly-registered bloc instance',
       (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     await tester.pumpWidget(
@@ -146,7 +146,7 @@ void main() {
 
     expect(find.text('0'), findsOneWidget);
 
-    deps.replace(BlocDependency<Counter>((_) => Counter(42)));
+    deps.replace(BlocDependency<Counter>((_, __) => Counter(42)));
     await tester.pumpAndSettle();
 
     expect(find.text('42'), findsOneWidget);

@@ -11,7 +11,7 @@ void main() {
   testWidgets('builds and listens for every emission by default',
       (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     final seen = <int>[];
@@ -44,7 +44,7 @@ void main() {
   testWidgets('buildWhen and listenWhen are evaluated independently',
       (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
     final seen = <int>[];
@@ -92,7 +92,7 @@ void main() {
   testWidgets('an explicit bloc is used instead of the one from Deps',
       (tester) async {
     final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_) => Counter(0)))
+      ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
     final explicitCounter = Counter(100);
     final seen = <int>[];
