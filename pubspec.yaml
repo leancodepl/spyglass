@@ -9,6 +9,28 @@ dev_dependencies:
 workspace:
   - packages/spyglass
   - packages/flutter_spyglass
+  - packages/flutter_spyglass_bloc
   - examples/*
 
 melos:
+  scripts:
+    analyze:
+      exec: dart analyze .
+
+    format:
+      exec: dart format --output=none --set-exit-if-changed .
+
+    test:dart:
+      exec: dart test
+      packageFilters:
+        flutter: false
+        dirExists: test
+
+    test:flutter:
+      exec: flutter test
+      packageFilters:
+        flutter: true
+        dirExists: test
+
+    test:
+      run: melos run test:dart && melos run test:flutter

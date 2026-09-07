@@ -1,8 +1,8 @@
 import 'package:spyglass/spyglass.dart';
 
 void main() {
-  deps.add(Dependency(create: (deps) => ServiceA(deps.get<ServiceB>())));
-  deps.add(Dependency(create: (deps) => ServiceB(deps.get<ServiceA>())));
+  deps.add(Dependency((deps, _) => ServiceA(deps.get<ServiceB>())));
+  deps.add(Dependency((deps, _) => ServiceB(deps.get<ServiceA>())));
 
   // This should throw a state error
   deps.get<ServiceA>();

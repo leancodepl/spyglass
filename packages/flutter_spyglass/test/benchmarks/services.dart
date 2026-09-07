@@ -1,0 +1,3354 @@
+// GENERATED FILE - do not edit by hand.
+// Regenerate with: dart run test/benchmarks/tool/generate_services.dart > test/benchmarks/services.dart
+import 'package:flutter/widgets.dart';
+import 'package:flutter_spyglass/flutter_spyglass.dart';
+import 'package:nested/nested.dart' show SingleChildWidget;
+import 'package:provider/provider.dart';
+
+const serviceCount = 100;
+
+/// Number of times the leaf at index i has rebuilt since the
+/// last [resetBuildCounts] call. Used to verify that mutating one
+/// service only rebuilds the widget(s) observing it.
+final List<int> buildCounts = List.filled(serviceCount, 0);
+
+void resetBuildCounts() {
+  buildCounts.fillRange(0, serviceCount, 0);
+}
+
+/// Common shape so the benchmark driver can mutate whichever
+/// service it looked up by index without per-index casts.
+abstract class MutableService extends ChangeNotifier {
+  int get value;
+  void update(int value);
+}
+
+class Svc0 extends MutableService {
+  Svc0(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc1 extends MutableService {
+  Svc1(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc2 extends MutableService {
+  Svc2(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc3 extends MutableService {
+  Svc3(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc4 extends MutableService {
+  Svc4(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc5 extends MutableService {
+  Svc5(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc6 extends MutableService {
+  Svc6(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc7 extends MutableService {
+  Svc7(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc8 extends MutableService {
+  Svc8(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc9 extends MutableService {
+  Svc9(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc10 extends MutableService {
+  Svc10(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc11 extends MutableService {
+  Svc11(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc12 extends MutableService {
+  Svc12(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc13 extends MutableService {
+  Svc13(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc14 extends MutableService {
+  Svc14(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc15 extends MutableService {
+  Svc15(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc16 extends MutableService {
+  Svc16(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc17 extends MutableService {
+  Svc17(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc18 extends MutableService {
+  Svc18(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc19 extends MutableService {
+  Svc19(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc20 extends MutableService {
+  Svc20(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc21 extends MutableService {
+  Svc21(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc22 extends MutableService {
+  Svc22(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc23 extends MutableService {
+  Svc23(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc24 extends MutableService {
+  Svc24(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc25 extends MutableService {
+  Svc25(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc26 extends MutableService {
+  Svc26(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc27 extends MutableService {
+  Svc27(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc28 extends MutableService {
+  Svc28(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc29 extends MutableService {
+  Svc29(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc30 extends MutableService {
+  Svc30(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc31 extends MutableService {
+  Svc31(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc32 extends MutableService {
+  Svc32(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc33 extends MutableService {
+  Svc33(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc34 extends MutableService {
+  Svc34(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc35 extends MutableService {
+  Svc35(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc36 extends MutableService {
+  Svc36(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc37 extends MutableService {
+  Svc37(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc38 extends MutableService {
+  Svc38(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc39 extends MutableService {
+  Svc39(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc40 extends MutableService {
+  Svc40(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc41 extends MutableService {
+  Svc41(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc42 extends MutableService {
+  Svc42(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc43 extends MutableService {
+  Svc43(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc44 extends MutableService {
+  Svc44(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc45 extends MutableService {
+  Svc45(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc46 extends MutableService {
+  Svc46(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc47 extends MutableService {
+  Svc47(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc48 extends MutableService {
+  Svc48(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc49 extends MutableService {
+  Svc49(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc50 extends MutableService {
+  Svc50(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc51 extends MutableService {
+  Svc51(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc52 extends MutableService {
+  Svc52(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc53 extends MutableService {
+  Svc53(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc54 extends MutableService {
+  Svc54(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc55 extends MutableService {
+  Svc55(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc56 extends MutableService {
+  Svc56(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc57 extends MutableService {
+  Svc57(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc58 extends MutableService {
+  Svc58(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc59 extends MutableService {
+  Svc59(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc60 extends MutableService {
+  Svc60(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc61 extends MutableService {
+  Svc61(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc62 extends MutableService {
+  Svc62(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc63 extends MutableService {
+  Svc63(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc64 extends MutableService {
+  Svc64(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc65 extends MutableService {
+  Svc65(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc66 extends MutableService {
+  Svc66(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc67 extends MutableService {
+  Svc67(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc68 extends MutableService {
+  Svc68(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc69 extends MutableService {
+  Svc69(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc70 extends MutableService {
+  Svc70(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc71 extends MutableService {
+  Svc71(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc72 extends MutableService {
+  Svc72(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc73 extends MutableService {
+  Svc73(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc74 extends MutableService {
+  Svc74(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc75 extends MutableService {
+  Svc75(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc76 extends MutableService {
+  Svc76(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc77 extends MutableService {
+  Svc77(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc78 extends MutableService {
+  Svc78(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc79 extends MutableService {
+  Svc79(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc80 extends MutableService {
+  Svc80(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc81 extends MutableService {
+  Svc81(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc82 extends MutableService {
+  Svc82(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc83 extends MutableService {
+  Svc83(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc84 extends MutableService {
+  Svc84(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc85 extends MutableService {
+  Svc85(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc86 extends MutableService {
+  Svc86(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc87 extends MutableService {
+  Svc87(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc88 extends MutableService {
+  Svc88(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc89 extends MutableService {
+  Svc89(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc90 extends MutableService {
+  Svc90(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc91 extends MutableService {
+  Svc91(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc92 extends MutableService {
+  Svc92(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc93 extends MutableService {
+  Svc93(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc94 extends MutableService {
+  Svc94(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc95 extends MutableService {
+  Svc95(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc96 extends MutableService {
+  Svc96(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc97 extends MutableService {
+  Svc97(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc98 extends MutableService {
+  Svc98(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+class Svc99 extends MutableService {
+  Svc99(this._value);
+  int _value;
+  @override
+  int get value => _value;
+  @override
+  void update(int v) {
+    _value = v;
+    notifyListeners();
+  }
+}
+
+final List<Type> serviceTypes = [
+  Svc0,
+  Svc1,
+  Svc2,
+  Svc3,
+  Svc4,
+  Svc5,
+  Svc6,
+  Svc7,
+  Svc8,
+  Svc9,
+  Svc10,
+  Svc11,
+  Svc12,
+  Svc13,
+  Svc14,
+  Svc15,
+  Svc16,
+  Svc17,
+  Svc18,
+  Svc19,
+  Svc20,
+  Svc21,
+  Svc22,
+  Svc23,
+  Svc24,
+  Svc25,
+  Svc26,
+  Svc27,
+  Svc28,
+  Svc29,
+  Svc30,
+  Svc31,
+  Svc32,
+  Svc33,
+  Svc34,
+  Svc35,
+  Svc36,
+  Svc37,
+  Svc38,
+  Svc39,
+  Svc40,
+  Svc41,
+  Svc42,
+  Svc43,
+  Svc44,
+  Svc45,
+  Svc46,
+  Svc47,
+  Svc48,
+  Svc49,
+  Svc50,
+  Svc51,
+  Svc52,
+  Svc53,
+  Svc54,
+  Svc55,
+  Svc56,
+  Svc57,
+  Svc58,
+  Svc59,
+  Svc60,
+  Svc61,
+  Svc62,
+  Svc63,
+  Svc64,
+  Svc65,
+  Svc66,
+  Svc67,
+  Svc68,
+  Svc69,
+  Svc70,
+  Svc71,
+  Svc72,
+  Svc73,
+  Svc74,
+  Svc75,
+  Svc76,
+  Svc77,
+  Svc78,
+  Svc79,
+  Svc80,
+  Svc81,
+  Svc82,
+  Svc83,
+  Svc84,
+  Svc85,
+  Svc86,
+  Svc87,
+  Svc88,
+  Svc89,
+  Svc90,
+  Svc91,
+  Svc92,
+  Svc93,
+  Svc94,
+  Svc95,
+  Svc96,
+  Svc97,
+  Svc98,
+  Svc99,
+];
+
+final List<Dependency<Object> Function(int value)> spyglassFactories = [
+  (v) => ChangeNotifierDependency<Svc0>((_, __) => Svc0(v)),
+  (v) => ChangeNotifierDependency<Svc1>((_, __) => Svc1(v)),
+  (v) => ChangeNotifierDependency<Svc2>((_, __) => Svc2(v)),
+  (v) => ChangeNotifierDependency<Svc3>((_, __) => Svc3(v)),
+  (v) => ChangeNotifierDependency<Svc4>((_, __) => Svc4(v)),
+  (v) => ChangeNotifierDependency<Svc5>((_, __) => Svc5(v)),
+  (v) => ChangeNotifierDependency<Svc6>((_, __) => Svc6(v)),
+  (v) => ChangeNotifierDependency<Svc7>((_, __) => Svc7(v)),
+  (v) => ChangeNotifierDependency<Svc8>((_, __) => Svc8(v)),
+  (v) => ChangeNotifierDependency<Svc9>((_, __) => Svc9(v)),
+  (v) => ChangeNotifierDependency<Svc10>((_, __) => Svc10(v)),
+  (v) => ChangeNotifierDependency<Svc11>((_, __) => Svc11(v)),
+  (v) => ChangeNotifierDependency<Svc12>((_, __) => Svc12(v)),
+  (v) => ChangeNotifierDependency<Svc13>((_, __) => Svc13(v)),
+  (v) => ChangeNotifierDependency<Svc14>((_, __) => Svc14(v)),
+  (v) => ChangeNotifierDependency<Svc15>((_, __) => Svc15(v)),
+  (v) => ChangeNotifierDependency<Svc16>((_, __) => Svc16(v)),
+  (v) => ChangeNotifierDependency<Svc17>((_, __) => Svc17(v)),
+  (v) => ChangeNotifierDependency<Svc18>((_, __) => Svc18(v)),
+  (v) => ChangeNotifierDependency<Svc19>((_, __) => Svc19(v)),
+  (v) => ChangeNotifierDependency<Svc20>((_, __) => Svc20(v)),
+  (v) => ChangeNotifierDependency<Svc21>((_, __) => Svc21(v)),
+  (v) => ChangeNotifierDependency<Svc22>((_, __) => Svc22(v)),
+  (v) => ChangeNotifierDependency<Svc23>((_, __) => Svc23(v)),
+  (v) => ChangeNotifierDependency<Svc24>((_, __) => Svc24(v)),
+  (v) => ChangeNotifierDependency<Svc25>((_, __) => Svc25(v)),
+  (v) => ChangeNotifierDependency<Svc26>((_, __) => Svc26(v)),
+  (v) => ChangeNotifierDependency<Svc27>((_, __) => Svc27(v)),
+  (v) => ChangeNotifierDependency<Svc28>((_, __) => Svc28(v)),
+  (v) => ChangeNotifierDependency<Svc29>((_, __) => Svc29(v)),
+  (v) => ChangeNotifierDependency<Svc30>((_, __) => Svc30(v)),
+  (v) => ChangeNotifierDependency<Svc31>((_, __) => Svc31(v)),
+  (v) => ChangeNotifierDependency<Svc32>((_, __) => Svc32(v)),
+  (v) => ChangeNotifierDependency<Svc33>((_, __) => Svc33(v)),
+  (v) => ChangeNotifierDependency<Svc34>((_, __) => Svc34(v)),
+  (v) => ChangeNotifierDependency<Svc35>((_, __) => Svc35(v)),
+  (v) => ChangeNotifierDependency<Svc36>((_, __) => Svc36(v)),
+  (v) => ChangeNotifierDependency<Svc37>((_, __) => Svc37(v)),
+  (v) => ChangeNotifierDependency<Svc38>((_, __) => Svc38(v)),
+  (v) => ChangeNotifierDependency<Svc39>((_, __) => Svc39(v)),
+  (v) => ChangeNotifierDependency<Svc40>((_, __) => Svc40(v)),
+  (v) => ChangeNotifierDependency<Svc41>((_, __) => Svc41(v)),
+  (v) => ChangeNotifierDependency<Svc42>((_, __) => Svc42(v)),
+  (v) => ChangeNotifierDependency<Svc43>((_, __) => Svc43(v)),
+  (v) => ChangeNotifierDependency<Svc44>((_, __) => Svc44(v)),
+  (v) => ChangeNotifierDependency<Svc45>((_, __) => Svc45(v)),
+  (v) => ChangeNotifierDependency<Svc46>((_, __) => Svc46(v)),
+  (v) => ChangeNotifierDependency<Svc47>((_, __) => Svc47(v)),
+  (v) => ChangeNotifierDependency<Svc48>((_, __) => Svc48(v)),
+  (v) => ChangeNotifierDependency<Svc49>((_, __) => Svc49(v)),
+  (v) => ChangeNotifierDependency<Svc50>((_, __) => Svc50(v)),
+  (v) => ChangeNotifierDependency<Svc51>((_, __) => Svc51(v)),
+  (v) => ChangeNotifierDependency<Svc52>((_, __) => Svc52(v)),
+  (v) => ChangeNotifierDependency<Svc53>((_, __) => Svc53(v)),
+  (v) => ChangeNotifierDependency<Svc54>((_, __) => Svc54(v)),
+  (v) => ChangeNotifierDependency<Svc55>((_, __) => Svc55(v)),
+  (v) => ChangeNotifierDependency<Svc56>((_, __) => Svc56(v)),
+  (v) => ChangeNotifierDependency<Svc57>((_, __) => Svc57(v)),
+  (v) => ChangeNotifierDependency<Svc58>((_, __) => Svc58(v)),
+  (v) => ChangeNotifierDependency<Svc59>((_, __) => Svc59(v)),
+  (v) => ChangeNotifierDependency<Svc60>((_, __) => Svc60(v)),
+  (v) => ChangeNotifierDependency<Svc61>((_, __) => Svc61(v)),
+  (v) => ChangeNotifierDependency<Svc62>((_, __) => Svc62(v)),
+  (v) => ChangeNotifierDependency<Svc63>((_, __) => Svc63(v)),
+  (v) => ChangeNotifierDependency<Svc64>((_, __) => Svc64(v)),
+  (v) => ChangeNotifierDependency<Svc65>((_, __) => Svc65(v)),
+  (v) => ChangeNotifierDependency<Svc66>((_, __) => Svc66(v)),
+  (v) => ChangeNotifierDependency<Svc67>((_, __) => Svc67(v)),
+  (v) => ChangeNotifierDependency<Svc68>((_, __) => Svc68(v)),
+  (v) => ChangeNotifierDependency<Svc69>((_, __) => Svc69(v)),
+  (v) => ChangeNotifierDependency<Svc70>((_, __) => Svc70(v)),
+  (v) => ChangeNotifierDependency<Svc71>((_, __) => Svc71(v)),
+  (v) => ChangeNotifierDependency<Svc72>((_, __) => Svc72(v)),
+  (v) => ChangeNotifierDependency<Svc73>((_, __) => Svc73(v)),
+  (v) => ChangeNotifierDependency<Svc74>((_, __) => Svc74(v)),
+  (v) => ChangeNotifierDependency<Svc75>((_, __) => Svc75(v)),
+  (v) => ChangeNotifierDependency<Svc76>((_, __) => Svc76(v)),
+  (v) => ChangeNotifierDependency<Svc77>((_, __) => Svc77(v)),
+  (v) => ChangeNotifierDependency<Svc78>((_, __) => Svc78(v)),
+  (v) => ChangeNotifierDependency<Svc79>((_, __) => Svc79(v)),
+  (v) => ChangeNotifierDependency<Svc80>((_, __) => Svc80(v)),
+  (v) => ChangeNotifierDependency<Svc81>((_, __) => Svc81(v)),
+  (v) => ChangeNotifierDependency<Svc82>((_, __) => Svc82(v)),
+  (v) => ChangeNotifierDependency<Svc83>((_, __) => Svc83(v)),
+  (v) => ChangeNotifierDependency<Svc84>((_, __) => Svc84(v)),
+  (v) => ChangeNotifierDependency<Svc85>((_, __) => Svc85(v)),
+  (v) => ChangeNotifierDependency<Svc86>((_, __) => Svc86(v)),
+  (v) => ChangeNotifierDependency<Svc87>((_, __) => Svc87(v)),
+  (v) => ChangeNotifierDependency<Svc88>((_, __) => Svc88(v)),
+  (v) => ChangeNotifierDependency<Svc89>((_, __) => Svc89(v)),
+  (v) => ChangeNotifierDependency<Svc90>((_, __) => Svc90(v)),
+  (v) => ChangeNotifierDependency<Svc91>((_, __) => Svc91(v)),
+  (v) => ChangeNotifierDependency<Svc92>((_, __) => Svc92(v)),
+  (v) => ChangeNotifierDependency<Svc93>((_, __) => Svc93(v)),
+  (v) => ChangeNotifierDependency<Svc94>((_, __) => Svc94(v)),
+  (v) => ChangeNotifierDependency<Svc95>((_, __) => Svc95(v)),
+  (v) => ChangeNotifierDependency<Svc96>((_, __) => Svc96(v)),
+  (v) => ChangeNotifierDependency<Svc97>((_, __) => Svc97(v)),
+  (v) => ChangeNotifierDependency<Svc98>((_, __) => Svc98(v)),
+  (v) => ChangeNotifierDependency<Svc99>((_, __) => Svc99(v)),
+];
+
+final List<Widget Function(BuildContext)> spyglassReaders = [
+  (c) {
+    buildCounts[0]++;
+    return Text(DepsContext(c).watch<Svc0>().value.toString());
+  },
+  (c) {
+    buildCounts[1]++;
+    return Text(DepsContext(c).watch<Svc1>().value.toString());
+  },
+  (c) {
+    buildCounts[2]++;
+    return Text(DepsContext(c).watch<Svc2>().value.toString());
+  },
+  (c) {
+    buildCounts[3]++;
+    return Text(DepsContext(c).watch<Svc3>().value.toString());
+  },
+  (c) {
+    buildCounts[4]++;
+    return Text(DepsContext(c).watch<Svc4>().value.toString());
+  },
+  (c) {
+    buildCounts[5]++;
+    return Text(DepsContext(c).watch<Svc5>().value.toString());
+  },
+  (c) {
+    buildCounts[6]++;
+    return Text(DepsContext(c).watch<Svc6>().value.toString());
+  },
+  (c) {
+    buildCounts[7]++;
+    return Text(DepsContext(c).watch<Svc7>().value.toString());
+  },
+  (c) {
+    buildCounts[8]++;
+    return Text(DepsContext(c).watch<Svc8>().value.toString());
+  },
+  (c) {
+    buildCounts[9]++;
+    return Text(DepsContext(c).watch<Svc9>().value.toString());
+  },
+  (c) {
+    buildCounts[10]++;
+    return Text(DepsContext(c).watch<Svc10>().value.toString());
+  },
+  (c) {
+    buildCounts[11]++;
+    return Text(DepsContext(c).watch<Svc11>().value.toString());
+  },
+  (c) {
+    buildCounts[12]++;
+    return Text(DepsContext(c).watch<Svc12>().value.toString());
+  },
+  (c) {
+    buildCounts[13]++;
+    return Text(DepsContext(c).watch<Svc13>().value.toString());
+  },
+  (c) {
+    buildCounts[14]++;
+    return Text(DepsContext(c).watch<Svc14>().value.toString());
+  },
+  (c) {
+    buildCounts[15]++;
+    return Text(DepsContext(c).watch<Svc15>().value.toString());
+  },
+  (c) {
+    buildCounts[16]++;
+    return Text(DepsContext(c).watch<Svc16>().value.toString());
+  },
+  (c) {
+    buildCounts[17]++;
+    return Text(DepsContext(c).watch<Svc17>().value.toString());
+  },
+  (c) {
+    buildCounts[18]++;
+    return Text(DepsContext(c).watch<Svc18>().value.toString());
+  },
+  (c) {
+    buildCounts[19]++;
+    return Text(DepsContext(c).watch<Svc19>().value.toString());
+  },
+  (c) {
+    buildCounts[20]++;
+    return Text(DepsContext(c).watch<Svc20>().value.toString());
+  },
+  (c) {
+    buildCounts[21]++;
+    return Text(DepsContext(c).watch<Svc21>().value.toString());
+  },
+  (c) {
+    buildCounts[22]++;
+    return Text(DepsContext(c).watch<Svc22>().value.toString());
+  },
+  (c) {
+    buildCounts[23]++;
+    return Text(DepsContext(c).watch<Svc23>().value.toString());
+  },
+  (c) {
+    buildCounts[24]++;
+    return Text(DepsContext(c).watch<Svc24>().value.toString());
+  },
+  (c) {
+    buildCounts[25]++;
+    return Text(DepsContext(c).watch<Svc25>().value.toString());
+  },
+  (c) {
+    buildCounts[26]++;
+    return Text(DepsContext(c).watch<Svc26>().value.toString());
+  },
+  (c) {
+    buildCounts[27]++;
+    return Text(DepsContext(c).watch<Svc27>().value.toString());
+  },
+  (c) {
+    buildCounts[28]++;
+    return Text(DepsContext(c).watch<Svc28>().value.toString());
+  },
+  (c) {
+    buildCounts[29]++;
+    return Text(DepsContext(c).watch<Svc29>().value.toString());
+  },
+  (c) {
+    buildCounts[30]++;
+    return Text(DepsContext(c).watch<Svc30>().value.toString());
+  },
+  (c) {
+    buildCounts[31]++;
+    return Text(DepsContext(c).watch<Svc31>().value.toString());
+  },
+  (c) {
+    buildCounts[32]++;
+    return Text(DepsContext(c).watch<Svc32>().value.toString());
+  },
+  (c) {
+    buildCounts[33]++;
+    return Text(DepsContext(c).watch<Svc33>().value.toString());
+  },
+  (c) {
+    buildCounts[34]++;
+    return Text(DepsContext(c).watch<Svc34>().value.toString());
+  },
+  (c) {
+    buildCounts[35]++;
+    return Text(DepsContext(c).watch<Svc35>().value.toString());
+  },
+  (c) {
+    buildCounts[36]++;
+    return Text(DepsContext(c).watch<Svc36>().value.toString());
+  },
+  (c) {
+    buildCounts[37]++;
+    return Text(DepsContext(c).watch<Svc37>().value.toString());
+  },
+  (c) {
+    buildCounts[38]++;
+    return Text(DepsContext(c).watch<Svc38>().value.toString());
+  },
+  (c) {
+    buildCounts[39]++;
+    return Text(DepsContext(c).watch<Svc39>().value.toString());
+  },
+  (c) {
+    buildCounts[40]++;
+    return Text(DepsContext(c).watch<Svc40>().value.toString());
+  },
+  (c) {
+    buildCounts[41]++;
+    return Text(DepsContext(c).watch<Svc41>().value.toString());
+  },
+  (c) {
+    buildCounts[42]++;
+    return Text(DepsContext(c).watch<Svc42>().value.toString());
+  },
+  (c) {
+    buildCounts[43]++;
+    return Text(DepsContext(c).watch<Svc43>().value.toString());
+  },
+  (c) {
+    buildCounts[44]++;
+    return Text(DepsContext(c).watch<Svc44>().value.toString());
+  },
+  (c) {
+    buildCounts[45]++;
+    return Text(DepsContext(c).watch<Svc45>().value.toString());
+  },
+  (c) {
+    buildCounts[46]++;
+    return Text(DepsContext(c).watch<Svc46>().value.toString());
+  },
+  (c) {
+    buildCounts[47]++;
+    return Text(DepsContext(c).watch<Svc47>().value.toString());
+  },
+  (c) {
+    buildCounts[48]++;
+    return Text(DepsContext(c).watch<Svc48>().value.toString());
+  },
+  (c) {
+    buildCounts[49]++;
+    return Text(DepsContext(c).watch<Svc49>().value.toString());
+  },
+  (c) {
+    buildCounts[50]++;
+    return Text(DepsContext(c).watch<Svc50>().value.toString());
+  },
+  (c) {
+    buildCounts[51]++;
+    return Text(DepsContext(c).watch<Svc51>().value.toString());
+  },
+  (c) {
+    buildCounts[52]++;
+    return Text(DepsContext(c).watch<Svc52>().value.toString());
+  },
+  (c) {
+    buildCounts[53]++;
+    return Text(DepsContext(c).watch<Svc53>().value.toString());
+  },
+  (c) {
+    buildCounts[54]++;
+    return Text(DepsContext(c).watch<Svc54>().value.toString());
+  },
+  (c) {
+    buildCounts[55]++;
+    return Text(DepsContext(c).watch<Svc55>().value.toString());
+  },
+  (c) {
+    buildCounts[56]++;
+    return Text(DepsContext(c).watch<Svc56>().value.toString());
+  },
+  (c) {
+    buildCounts[57]++;
+    return Text(DepsContext(c).watch<Svc57>().value.toString());
+  },
+  (c) {
+    buildCounts[58]++;
+    return Text(DepsContext(c).watch<Svc58>().value.toString());
+  },
+  (c) {
+    buildCounts[59]++;
+    return Text(DepsContext(c).watch<Svc59>().value.toString());
+  },
+  (c) {
+    buildCounts[60]++;
+    return Text(DepsContext(c).watch<Svc60>().value.toString());
+  },
+  (c) {
+    buildCounts[61]++;
+    return Text(DepsContext(c).watch<Svc61>().value.toString());
+  },
+  (c) {
+    buildCounts[62]++;
+    return Text(DepsContext(c).watch<Svc62>().value.toString());
+  },
+  (c) {
+    buildCounts[63]++;
+    return Text(DepsContext(c).watch<Svc63>().value.toString());
+  },
+  (c) {
+    buildCounts[64]++;
+    return Text(DepsContext(c).watch<Svc64>().value.toString());
+  },
+  (c) {
+    buildCounts[65]++;
+    return Text(DepsContext(c).watch<Svc65>().value.toString());
+  },
+  (c) {
+    buildCounts[66]++;
+    return Text(DepsContext(c).watch<Svc66>().value.toString());
+  },
+  (c) {
+    buildCounts[67]++;
+    return Text(DepsContext(c).watch<Svc67>().value.toString());
+  },
+  (c) {
+    buildCounts[68]++;
+    return Text(DepsContext(c).watch<Svc68>().value.toString());
+  },
+  (c) {
+    buildCounts[69]++;
+    return Text(DepsContext(c).watch<Svc69>().value.toString());
+  },
+  (c) {
+    buildCounts[70]++;
+    return Text(DepsContext(c).watch<Svc70>().value.toString());
+  },
+  (c) {
+    buildCounts[71]++;
+    return Text(DepsContext(c).watch<Svc71>().value.toString());
+  },
+  (c) {
+    buildCounts[72]++;
+    return Text(DepsContext(c).watch<Svc72>().value.toString());
+  },
+  (c) {
+    buildCounts[73]++;
+    return Text(DepsContext(c).watch<Svc73>().value.toString());
+  },
+  (c) {
+    buildCounts[74]++;
+    return Text(DepsContext(c).watch<Svc74>().value.toString());
+  },
+  (c) {
+    buildCounts[75]++;
+    return Text(DepsContext(c).watch<Svc75>().value.toString());
+  },
+  (c) {
+    buildCounts[76]++;
+    return Text(DepsContext(c).watch<Svc76>().value.toString());
+  },
+  (c) {
+    buildCounts[77]++;
+    return Text(DepsContext(c).watch<Svc77>().value.toString());
+  },
+  (c) {
+    buildCounts[78]++;
+    return Text(DepsContext(c).watch<Svc78>().value.toString());
+  },
+  (c) {
+    buildCounts[79]++;
+    return Text(DepsContext(c).watch<Svc79>().value.toString());
+  },
+  (c) {
+    buildCounts[80]++;
+    return Text(DepsContext(c).watch<Svc80>().value.toString());
+  },
+  (c) {
+    buildCounts[81]++;
+    return Text(DepsContext(c).watch<Svc81>().value.toString());
+  },
+  (c) {
+    buildCounts[82]++;
+    return Text(DepsContext(c).watch<Svc82>().value.toString());
+  },
+  (c) {
+    buildCounts[83]++;
+    return Text(DepsContext(c).watch<Svc83>().value.toString());
+  },
+  (c) {
+    buildCounts[84]++;
+    return Text(DepsContext(c).watch<Svc84>().value.toString());
+  },
+  (c) {
+    buildCounts[85]++;
+    return Text(DepsContext(c).watch<Svc85>().value.toString());
+  },
+  (c) {
+    buildCounts[86]++;
+    return Text(DepsContext(c).watch<Svc86>().value.toString());
+  },
+  (c) {
+    buildCounts[87]++;
+    return Text(DepsContext(c).watch<Svc87>().value.toString());
+  },
+  (c) {
+    buildCounts[88]++;
+    return Text(DepsContext(c).watch<Svc88>().value.toString());
+  },
+  (c) {
+    buildCounts[89]++;
+    return Text(DepsContext(c).watch<Svc89>().value.toString());
+  },
+  (c) {
+    buildCounts[90]++;
+    return Text(DepsContext(c).watch<Svc90>().value.toString());
+  },
+  (c) {
+    buildCounts[91]++;
+    return Text(DepsContext(c).watch<Svc91>().value.toString());
+  },
+  (c) {
+    buildCounts[92]++;
+    return Text(DepsContext(c).watch<Svc92>().value.toString());
+  },
+  (c) {
+    buildCounts[93]++;
+    return Text(DepsContext(c).watch<Svc93>().value.toString());
+  },
+  (c) {
+    buildCounts[94]++;
+    return Text(DepsContext(c).watch<Svc94>().value.toString());
+  },
+  (c) {
+    buildCounts[95]++;
+    return Text(DepsContext(c).watch<Svc95>().value.toString());
+  },
+  (c) {
+    buildCounts[96]++;
+    return Text(DepsContext(c).watch<Svc96>().value.toString());
+  },
+  (c) {
+    buildCounts[97]++;
+    return Text(DepsContext(c).watch<Svc97>().value.toString());
+  },
+  (c) {
+    buildCounts[98]++;
+    return Text(DepsContext(c).watch<Svc98>().value.toString());
+  },
+  (c) {
+    buildCounts[99]++;
+    return Text(DepsContext(c).watch<Svc99>().value.toString());
+  },
+];
+
+final List<MutableService Function(Deps)> spyglassGetters = [
+  (d) => d.get<Svc0>(),
+  (d) => d.get<Svc1>(),
+  (d) => d.get<Svc2>(),
+  (d) => d.get<Svc3>(),
+  (d) => d.get<Svc4>(),
+  (d) => d.get<Svc5>(),
+  (d) => d.get<Svc6>(),
+  (d) => d.get<Svc7>(),
+  (d) => d.get<Svc8>(),
+  (d) => d.get<Svc9>(),
+  (d) => d.get<Svc10>(),
+  (d) => d.get<Svc11>(),
+  (d) => d.get<Svc12>(),
+  (d) => d.get<Svc13>(),
+  (d) => d.get<Svc14>(),
+  (d) => d.get<Svc15>(),
+  (d) => d.get<Svc16>(),
+  (d) => d.get<Svc17>(),
+  (d) => d.get<Svc18>(),
+  (d) => d.get<Svc19>(),
+  (d) => d.get<Svc20>(),
+  (d) => d.get<Svc21>(),
+  (d) => d.get<Svc22>(),
+  (d) => d.get<Svc23>(),
+  (d) => d.get<Svc24>(),
+  (d) => d.get<Svc25>(),
+  (d) => d.get<Svc26>(),
+  (d) => d.get<Svc27>(),
+  (d) => d.get<Svc28>(),
+  (d) => d.get<Svc29>(),
+  (d) => d.get<Svc30>(),
+  (d) => d.get<Svc31>(),
+  (d) => d.get<Svc32>(),
+  (d) => d.get<Svc33>(),
+  (d) => d.get<Svc34>(),
+  (d) => d.get<Svc35>(),
+  (d) => d.get<Svc36>(),
+  (d) => d.get<Svc37>(),
+  (d) => d.get<Svc38>(),
+  (d) => d.get<Svc39>(),
+  (d) => d.get<Svc40>(),
+  (d) => d.get<Svc41>(),
+  (d) => d.get<Svc42>(),
+  (d) => d.get<Svc43>(),
+  (d) => d.get<Svc44>(),
+  (d) => d.get<Svc45>(),
+  (d) => d.get<Svc46>(),
+  (d) => d.get<Svc47>(),
+  (d) => d.get<Svc48>(),
+  (d) => d.get<Svc49>(),
+  (d) => d.get<Svc50>(),
+  (d) => d.get<Svc51>(),
+  (d) => d.get<Svc52>(),
+  (d) => d.get<Svc53>(),
+  (d) => d.get<Svc54>(),
+  (d) => d.get<Svc55>(),
+  (d) => d.get<Svc56>(),
+  (d) => d.get<Svc57>(),
+  (d) => d.get<Svc58>(),
+  (d) => d.get<Svc59>(),
+  (d) => d.get<Svc60>(),
+  (d) => d.get<Svc61>(),
+  (d) => d.get<Svc62>(),
+  (d) => d.get<Svc63>(),
+  (d) => d.get<Svc64>(),
+  (d) => d.get<Svc65>(),
+  (d) => d.get<Svc66>(),
+  (d) => d.get<Svc67>(),
+  (d) => d.get<Svc68>(),
+  (d) => d.get<Svc69>(),
+  (d) => d.get<Svc70>(),
+  (d) => d.get<Svc71>(),
+  (d) => d.get<Svc72>(),
+  (d) => d.get<Svc73>(),
+  (d) => d.get<Svc74>(),
+  (d) => d.get<Svc75>(),
+  (d) => d.get<Svc76>(),
+  (d) => d.get<Svc77>(),
+  (d) => d.get<Svc78>(),
+  (d) => d.get<Svc79>(),
+  (d) => d.get<Svc80>(),
+  (d) => d.get<Svc81>(),
+  (d) => d.get<Svc82>(),
+  (d) => d.get<Svc83>(),
+  (d) => d.get<Svc84>(),
+  (d) => d.get<Svc85>(),
+  (d) => d.get<Svc86>(),
+  (d) => d.get<Svc87>(),
+  (d) => d.get<Svc88>(),
+  (d) => d.get<Svc89>(),
+  (d) => d.get<Svc90>(),
+  (d) => d.get<Svc91>(),
+  (d) => d.get<Svc92>(),
+  (d) => d.get<Svc93>(),
+  (d) => d.get<Svc94>(),
+  (d) => d.get<Svc95>(),
+  (d) => d.get<Svc96>(),
+  (d) => d.get<Svc97>(),
+  (d) => d.get<Svc98>(),
+  (d) => d.get<Svc99>(),
+];
+
+final List<SingleChildWidget Function(int value)> providerFactories = [
+  (v) => ChangeNotifierProvider<Svc0>(create: (_) => Svc0(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc1>(create: (_) => Svc1(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc2>(create: (_) => Svc2(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc3>(create: (_) => Svc3(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc4>(create: (_) => Svc4(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc5>(create: (_) => Svc5(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc6>(create: (_) => Svc6(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc7>(create: (_) => Svc7(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc8>(create: (_) => Svc8(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc9>(create: (_) => Svc9(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc10>(create: (_) => Svc10(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc11>(create: (_) => Svc11(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc12>(create: (_) => Svc12(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc13>(create: (_) => Svc13(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc14>(create: (_) => Svc14(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc15>(create: (_) => Svc15(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc16>(create: (_) => Svc16(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc17>(create: (_) => Svc17(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc18>(create: (_) => Svc18(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc19>(create: (_) => Svc19(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc20>(create: (_) => Svc20(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc21>(create: (_) => Svc21(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc22>(create: (_) => Svc22(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc23>(create: (_) => Svc23(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc24>(create: (_) => Svc24(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc25>(create: (_) => Svc25(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc26>(create: (_) => Svc26(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc27>(create: (_) => Svc27(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc28>(create: (_) => Svc28(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc29>(create: (_) => Svc29(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc30>(create: (_) => Svc30(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc31>(create: (_) => Svc31(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc32>(create: (_) => Svc32(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc33>(create: (_) => Svc33(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc34>(create: (_) => Svc34(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc35>(create: (_) => Svc35(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc36>(create: (_) => Svc36(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc37>(create: (_) => Svc37(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc38>(create: (_) => Svc38(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc39>(create: (_) => Svc39(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc40>(create: (_) => Svc40(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc41>(create: (_) => Svc41(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc42>(create: (_) => Svc42(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc43>(create: (_) => Svc43(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc44>(create: (_) => Svc44(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc45>(create: (_) => Svc45(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc46>(create: (_) => Svc46(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc47>(create: (_) => Svc47(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc48>(create: (_) => Svc48(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc49>(create: (_) => Svc49(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc50>(create: (_) => Svc50(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc51>(create: (_) => Svc51(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc52>(create: (_) => Svc52(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc53>(create: (_) => Svc53(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc54>(create: (_) => Svc54(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc55>(create: (_) => Svc55(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc56>(create: (_) => Svc56(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc57>(create: (_) => Svc57(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc58>(create: (_) => Svc58(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc59>(create: (_) => Svc59(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc60>(create: (_) => Svc60(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc61>(create: (_) => Svc61(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc62>(create: (_) => Svc62(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc63>(create: (_) => Svc63(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc64>(create: (_) => Svc64(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc65>(create: (_) => Svc65(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc66>(create: (_) => Svc66(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc67>(create: (_) => Svc67(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc68>(create: (_) => Svc68(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc69>(create: (_) => Svc69(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc70>(create: (_) => Svc70(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc71>(create: (_) => Svc71(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc72>(create: (_) => Svc72(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc73>(create: (_) => Svc73(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc74>(create: (_) => Svc74(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc75>(create: (_) => Svc75(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc76>(create: (_) => Svc76(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc77>(create: (_) => Svc77(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc78>(create: (_) => Svc78(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc79>(create: (_) => Svc79(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc80>(create: (_) => Svc80(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc81>(create: (_) => Svc81(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc82>(create: (_) => Svc82(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc83>(create: (_) => Svc83(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc84>(create: (_) => Svc84(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc85>(create: (_) => Svc85(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc86>(create: (_) => Svc86(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc87>(create: (_) => Svc87(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc88>(create: (_) => Svc88(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc89>(create: (_) => Svc89(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc90>(create: (_) => Svc90(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc91>(create: (_) => Svc91(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc92>(create: (_) => Svc92(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc93>(create: (_) => Svc93(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc94>(create: (_) => Svc94(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc95>(create: (_) => Svc95(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc96>(create: (_) => Svc96(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc97>(create: (_) => Svc97(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc98>(create: (_) => Svc98(v), lazy: false),
+  (v) => ChangeNotifierProvider<Svc99>(create: (_) => Svc99(v), lazy: false),
+];
+
+final List<Widget Function(BuildContext)> providerReaders = [
+  (c) {
+    buildCounts[0]++;
+    return Text(WatchContext(c).watch<Svc0>().value.toString());
+  },
+  (c) {
+    buildCounts[1]++;
+    return Text(WatchContext(c).watch<Svc1>().value.toString());
+  },
+  (c) {
+    buildCounts[2]++;
+    return Text(WatchContext(c).watch<Svc2>().value.toString());
+  },
+  (c) {
+    buildCounts[3]++;
+    return Text(WatchContext(c).watch<Svc3>().value.toString());
+  },
+  (c) {
+    buildCounts[4]++;
+    return Text(WatchContext(c).watch<Svc4>().value.toString());
+  },
+  (c) {
+    buildCounts[5]++;
+    return Text(WatchContext(c).watch<Svc5>().value.toString());
+  },
+  (c) {
+    buildCounts[6]++;
+    return Text(WatchContext(c).watch<Svc6>().value.toString());
+  },
+  (c) {
+    buildCounts[7]++;
+    return Text(WatchContext(c).watch<Svc7>().value.toString());
+  },
+  (c) {
+    buildCounts[8]++;
+    return Text(WatchContext(c).watch<Svc8>().value.toString());
+  },
+  (c) {
+    buildCounts[9]++;
+    return Text(WatchContext(c).watch<Svc9>().value.toString());
+  },
+  (c) {
+    buildCounts[10]++;
+    return Text(WatchContext(c).watch<Svc10>().value.toString());
+  },
+  (c) {
+    buildCounts[11]++;
+    return Text(WatchContext(c).watch<Svc11>().value.toString());
+  },
+  (c) {
+    buildCounts[12]++;
+    return Text(WatchContext(c).watch<Svc12>().value.toString());
+  },
+  (c) {
+    buildCounts[13]++;
+    return Text(WatchContext(c).watch<Svc13>().value.toString());
+  },
+  (c) {
+    buildCounts[14]++;
+    return Text(WatchContext(c).watch<Svc14>().value.toString());
+  },
+  (c) {
+    buildCounts[15]++;
+    return Text(WatchContext(c).watch<Svc15>().value.toString());
+  },
+  (c) {
+    buildCounts[16]++;
+    return Text(WatchContext(c).watch<Svc16>().value.toString());
+  },
+  (c) {
+    buildCounts[17]++;
+    return Text(WatchContext(c).watch<Svc17>().value.toString());
+  },
+  (c) {
+    buildCounts[18]++;
+    return Text(WatchContext(c).watch<Svc18>().value.toString());
+  },
+  (c) {
+    buildCounts[19]++;
+    return Text(WatchContext(c).watch<Svc19>().value.toString());
+  },
+  (c) {
+    buildCounts[20]++;
+    return Text(WatchContext(c).watch<Svc20>().value.toString());
+  },
+  (c) {
+    buildCounts[21]++;
+    return Text(WatchContext(c).watch<Svc21>().value.toString());
+  },
+  (c) {
+    buildCounts[22]++;
+    return Text(WatchContext(c).watch<Svc22>().value.toString());
+  },
+  (c) {
+    buildCounts[23]++;
+    return Text(WatchContext(c).watch<Svc23>().value.toString());
+  },
+  (c) {
+    buildCounts[24]++;
+    return Text(WatchContext(c).watch<Svc24>().value.toString());
+  },
+  (c) {
+    buildCounts[25]++;
+    return Text(WatchContext(c).watch<Svc25>().value.toString());
+  },
+  (c) {
+    buildCounts[26]++;
+    return Text(WatchContext(c).watch<Svc26>().value.toString());
+  },
+  (c) {
+    buildCounts[27]++;
+    return Text(WatchContext(c).watch<Svc27>().value.toString());
+  },
+  (c) {
+    buildCounts[28]++;
+    return Text(WatchContext(c).watch<Svc28>().value.toString());
+  },
+  (c) {
+    buildCounts[29]++;
+    return Text(WatchContext(c).watch<Svc29>().value.toString());
+  },
+  (c) {
+    buildCounts[30]++;
+    return Text(WatchContext(c).watch<Svc30>().value.toString());
+  },
+  (c) {
+    buildCounts[31]++;
+    return Text(WatchContext(c).watch<Svc31>().value.toString());
+  },
+  (c) {
+    buildCounts[32]++;
+    return Text(WatchContext(c).watch<Svc32>().value.toString());
+  },
+  (c) {
+    buildCounts[33]++;
+    return Text(WatchContext(c).watch<Svc33>().value.toString());
+  },
+  (c) {
+    buildCounts[34]++;
+    return Text(WatchContext(c).watch<Svc34>().value.toString());
+  },
+  (c) {
+    buildCounts[35]++;
+    return Text(WatchContext(c).watch<Svc35>().value.toString());
+  },
+  (c) {
+    buildCounts[36]++;
+    return Text(WatchContext(c).watch<Svc36>().value.toString());
+  },
+  (c) {
+    buildCounts[37]++;
+    return Text(WatchContext(c).watch<Svc37>().value.toString());
+  },
+  (c) {
+    buildCounts[38]++;
+    return Text(WatchContext(c).watch<Svc38>().value.toString());
+  },
+  (c) {
+    buildCounts[39]++;
+    return Text(WatchContext(c).watch<Svc39>().value.toString());
+  },
+  (c) {
+    buildCounts[40]++;
+    return Text(WatchContext(c).watch<Svc40>().value.toString());
+  },
+  (c) {
+    buildCounts[41]++;
+    return Text(WatchContext(c).watch<Svc41>().value.toString());
+  },
+  (c) {
+    buildCounts[42]++;
+    return Text(WatchContext(c).watch<Svc42>().value.toString());
+  },
+  (c) {
+    buildCounts[43]++;
+    return Text(WatchContext(c).watch<Svc43>().value.toString());
+  },
+  (c) {
+    buildCounts[44]++;
+    return Text(WatchContext(c).watch<Svc44>().value.toString());
+  },
+  (c) {
+    buildCounts[45]++;
+    return Text(WatchContext(c).watch<Svc45>().value.toString());
+  },
+  (c) {
+    buildCounts[46]++;
+    return Text(WatchContext(c).watch<Svc46>().value.toString());
+  },
+  (c) {
+    buildCounts[47]++;
+    return Text(WatchContext(c).watch<Svc47>().value.toString());
+  },
+  (c) {
+    buildCounts[48]++;
+    return Text(WatchContext(c).watch<Svc48>().value.toString());
+  },
+  (c) {
+    buildCounts[49]++;
+    return Text(WatchContext(c).watch<Svc49>().value.toString());
+  },
+  (c) {
+    buildCounts[50]++;
+    return Text(WatchContext(c).watch<Svc50>().value.toString());
+  },
+  (c) {
+    buildCounts[51]++;
+    return Text(WatchContext(c).watch<Svc51>().value.toString());
+  },
+  (c) {
+    buildCounts[52]++;
+    return Text(WatchContext(c).watch<Svc52>().value.toString());
+  },
+  (c) {
+    buildCounts[53]++;
+    return Text(WatchContext(c).watch<Svc53>().value.toString());
+  },
+  (c) {
+    buildCounts[54]++;
+    return Text(WatchContext(c).watch<Svc54>().value.toString());
+  },
+  (c) {
+    buildCounts[55]++;
+    return Text(WatchContext(c).watch<Svc55>().value.toString());
+  },
+  (c) {
+    buildCounts[56]++;
+    return Text(WatchContext(c).watch<Svc56>().value.toString());
+  },
+  (c) {
+    buildCounts[57]++;
+    return Text(WatchContext(c).watch<Svc57>().value.toString());
+  },
+  (c) {
+    buildCounts[58]++;
+    return Text(WatchContext(c).watch<Svc58>().value.toString());
+  },
+  (c) {
+    buildCounts[59]++;
+    return Text(WatchContext(c).watch<Svc59>().value.toString());
+  },
+  (c) {
+    buildCounts[60]++;
+    return Text(WatchContext(c).watch<Svc60>().value.toString());
+  },
+  (c) {
+    buildCounts[61]++;
+    return Text(WatchContext(c).watch<Svc61>().value.toString());
+  },
+  (c) {
+    buildCounts[62]++;
+    return Text(WatchContext(c).watch<Svc62>().value.toString());
+  },
+  (c) {
+    buildCounts[63]++;
+    return Text(WatchContext(c).watch<Svc63>().value.toString());
+  },
+  (c) {
+    buildCounts[64]++;
+    return Text(WatchContext(c).watch<Svc64>().value.toString());
+  },
+  (c) {
+    buildCounts[65]++;
+    return Text(WatchContext(c).watch<Svc65>().value.toString());
+  },
+  (c) {
+    buildCounts[66]++;
+    return Text(WatchContext(c).watch<Svc66>().value.toString());
+  },
+  (c) {
+    buildCounts[67]++;
+    return Text(WatchContext(c).watch<Svc67>().value.toString());
+  },
+  (c) {
+    buildCounts[68]++;
+    return Text(WatchContext(c).watch<Svc68>().value.toString());
+  },
+  (c) {
+    buildCounts[69]++;
+    return Text(WatchContext(c).watch<Svc69>().value.toString());
+  },
+  (c) {
+    buildCounts[70]++;
+    return Text(WatchContext(c).watch<Svc70>().value.toString());
+  },
+  (c) {
+    buildCounts[71]++;
+    return Text(WatchContext(c).watch<Svc71>().value.toString());
+  },
+  (c) {
+    buildCounts[72]++;
+    return Text(WatchContext(c).watch<Svc72>().value.toString());
+  },
+  (c) {
+    buildCounts[73]++;
+    return Text(WatchContext(c).watch<Svc73>().value.toString());
+  },
+  (c) {
+    buildCounts[74]++;
+    return Text(WatchContext(c).watch<Svc74>().value.toString());
+  },
+  (c) {
+    buildCounts[75]++;
+    return Text(WatchContext(c).watch<Svc75>().value.toString());
+  },
+  (c) {
+    buildCounts[76]++;
+    return Text(WatchContext(c).watch<Svc76>().value.toString());
+  },
+  (c) {
+    buildCounts[77]++;
+    return Text(WatchContext(c).watch<Svc77>().value.toString());
+  },
+  (c) {
+    buildCounts[78]++;
+    return Text(WatchContext(c).watch<Svc78>().value.toString());
+  },
+  (c) {
+    buildCounts[79]++;
+    return Text(WatchContext(c).watch<Svc79>().value.toString());
+  },
+  (c) {
+    buildCounts[80]++;
+    return Text(WatchContext(c).watch<Svc80>().value.toString());
+  },
+  (c) {
+    buildCounts[81]++;
+    return Text(WatchContext(c).watch<Svc81>().value.toString());
+  },
+  (c) {
+    buildCounts[82]++;
+    return Text(WatchContext(c).watch<Svc82>().value.toString());
+  },
+  (c) {
+    buildCounts[83]++;
+    return Text(WatchContext(c).watch<Svc83>().value.toString());
+  },
+  (c) {
+    buildCounts[84]++;
+    return Text(WatchContext(c).watch<Svc84>().value.toString());
+  },
+  (c) {
+    buildCounts[85]++;
+    return Text(WatchContext(c).watch<Svc85>().value.toString());
+  },
+  (c) {
+    buildCounts[86]++;
+    return Text(WatchContext(c).watch<Svc86>().value.toString());
+  },
+  (c) {
+    buildCounts[87]++;
+    return Text(WatchContext(c).watch<Svc87>().value.toString());
+  },
+  (c) {
+    buildCounts[88]++;
+    return Text(WatchContext(c).watch<Svc88>().value.toString());
+  },
+  (c) {
+    buildCounts[89]++;
+    return Text(WatchContext(c).watch<Svc89>().value.toString());
+  },
+  (c) {
+    buildCounts[90]++;
+    return Text(WatchContext(c).watch<Svc90>().value.toString());
+  },
+  (c) {
+    buildCounts[91]++;
+    return Text(WatchContext(c).watch<Svc91>().value.toString());
+  },
+  (c) {
+    buildCounts[92]++;
+    return Text(WatchContext(c).watch<Svc92>().value.toString());
+  },
+  (c) {
+    buildCounts[93]++;
+    return Text(WatchContext(c).watch<Svc93>().value.toString());
+  },
+  (c) {
+    buildCounts[94]++;
+    return Text(WatchContext(c).watch<Svc94>().value.toString());
+  },
+  (c) {
+    buildCounts[95]++;
+    return Text(WatchContext(c).watch<Svc95>().value.toString());
+  },
+  (c) {
+    buildCounts[96]++;
+    return Text(WatchContext(c).watch<Svc96>().value.toString());
+  },
+  (c) {
+    buildCounts[97]++;
+    return Text(WatchContext(c).watch<Svc97>().value.toString());
+  },
+  (c) {
+    buildCounts[98]++;
+    return Text(WatchContext(c).watch<Svc98>().value.toString());
+  },
+  (c) {
+    buildCounts[99]++;
+    return Text(WatchContext(c).watch<Svc99>().value.toString());
+  },
+];
+
+final List<MutableService Function(BuildContext)> providerGetters = [
+  (c) => ReadContext(c).read<Svc0>(),
+  (c) => ReadContext(c).read<Svc1>(),
+  (c) => ReadContext(c).read<Svc2>(),
+  (c) => ReadContext(c).read<Svc3>(),
+  (c) => ReadContext(c).read<Svc4>(),
+  (c) => ReadContext(c).read<Svc5>(),
+  (c) => ReadContext(c).read<Svc6>(),
+  (c) => ReadContext(c).read<Svc7>(),
+  (c) => ReadContext(c).read<Svc8>(),
+  (c) => ReadContext(c).read<Svc9>(),
+  (c) => ReadContext(c).read<Svc10>(),
+  (c) => ReadContext(c).read<Svc11>(),
+  (c) => ReadContext(c).read<Svc12>(),
+  (c) => ReadContext(c).read<Svc13>(),
+  (c) => ReadContext(c).read<Svc14>(),
+  (c) => ReadContext(c).read<Svc15>(),
+  (c) => ReadContext(c).read<Svc16>(),
+  (c) => ReadContext(c).read<Svc17>(),
+  (c) => ReadContext(c).read<Svc18>(),
+  (c) => ReadContext(c).read<Svc19>(),
+  (c) => ReadContext(c).read<Svc20>(),
+  (c) => ReadContext(c).read<Svc21>(),
+  (c) => ReadContext(c).read<Svc22>(),
+  (c) => ReadContext(c).read<Svc23>(),
+  (c) => ReadContext(c).read<Svc24>(),
+  (c) => ReadContext(c).read<Svc25>(),
+  (c) => ReadContext(c).read<Svc26>(),
+  (c) => ReadContext(c).read<Svc27>(),
+  (c) => ReadContext(c).read<Svc28>(),
+  (c) => ReadContext(c).read<Svc29>(),
+  (c) => ReadContext(c).read<Svc30>(),
+  (c) => ReadContext(c).read<Svc31>(),
+  (c) => ReadContext(c).read<Svc32>(),
+  (c) => ReadContext(c).read<Svc33>(),
+  (c) => ReadContext(c).read<Svc34>(),
+  (c) => ReadContext(c).read<Svc35>(),
+  (c) => ReadContext(c).read<Svc36>(),
+  (c) => ReadContext(c).read<Svc37>(),
+  (c) => ReadContext(c).read<Svc38>(),
+  (c) => ReadContext(c).read<Svc39>(),
+  (c) => ReadContext(c).read<Svc40>(),
+  (c) => ReadContext(c).read<Svc41>(),
+  (c) => ReadContext(c).read<Svc42>(),
+  (c) => ReadContext(c).read<Svc43>(),
+  (c) => ReadContext(c).read<Svc44>(),
+  (c) => ReadContext(c).read<Svc45>(),
+  (c) => ReadContext(c).read<Svc46>(),
+  (c) => ReadContext(c).read<Svc47>(),
+  (c) => ReadContext(c).read<Svc48>(),
+  (c) => ReadContext(c).read<Svc49>(),
+  (c) => ReadContext(c).read<Svc50>(),
+  (c) => ReadContext(c).read<Svc51>(),
+  (c) => ReadContext(c).read<Svc52>(),
+  (c) => ReadContext(c).read<Svc53>(),
+  (c) => ReadContext(c).read<Svc54>(),
+  (c) => ReadContext(c).read<Svc55>(),
+  (c) => ReadContext(c).read<Svc56>(),
+  (c) => ReadContext(c).read<Svc57>(),
+  (c) => ReadContext(c).read<Svc58>(),
+  (c) => ReadContext(c).read<Svc59>(),
+  (c) => ReadContext(c).read<Svc60>(),
+  (c) => ReadContext(c).read<Svc61>(),
+  (c) => ReadContext(c).read<Svc62>(),
+  (c) => ReadContext(c).read<Svc63>(),
+  (c) => ReadContext(c).read<Svc64>(),
+  (c) => ReadContext(c).read<Svc65>(),
+  (c) => ReadContext(c).read<Svc66>(),
+  (c) => ReadContext(c).read<Svc67>(),
+  (c) => ReadContext(c).read<Svc68>(),
+  (c) => ReadContext(c).read<Svc69>(),
+  (c) => ReadContext(c).read<Svc70>(),
+  (c) => ReadContext(c).read<Svc71>(),
+  (c) => ReadContext(c).read<Svc72>(),
+  (c) => ReadContext(c).read<Svc73>(),
+  (c) => ReadContext(c).read<Svc74>(),
+  (c) => ReadContext(c).read<Svc75>(),
+  (c) => ReadContext(c).read<Svc76>(),
+  (c) => ReadContext(c).read<Svc77>(),
+  (c) => ReadContext(c).read<Svc78>(),
+  (c) => ReadContext(c).read<Svc79>(),
+  (c) => ReadContext(c).read<Svc80>(),
+  (c) => ReadContext(c).read<Svc81>(),
+  (c) => ReadContext(c).read<Svc82>(),
+  (c) => ReadContext(c).read<Svc83>(),
+  (c) => ReadContext(c).read<Svc84>(),
+  (c) => ReadContext(c).read<Svc85>(),
+  (c) => ReadContext(c).read<Svc86>(),
+  (c) => ReadContext(c).read<Svc87>(),
+  (c) => ReadContext(c).read<Svc88>(),
+  (c) => ReadContext(c).read<Svc89>(),
+  (c) => ReadContext(c).read<Svc90>(),
+  (c) => ReadContext(c).read<Svc91>(),
+  (c) => ReadContext(c).read<Svc92>(),
+  (c) => ReadContext(c).read<Svc93>(),
+  (c) => ReadContext(c).read<Svc94>(),
+  (c) => ReadContext(c).read<Svc95>(),
+  (c) => ReadContext(c).read<Svc96>(),
+  (c) => ReadContext(c).read<Svc97>(),
+  (c) => ReadContext(c).read<Svc98>(),
+  (c) => ReadContext(c).read<Svc99>(),
+];
+
+/// Plain, non-reactive reads - never calls observe()/watch(),
+/// so on the spyglass side no DependencyObserver/BehaviorSubject
+/// is ever created for these services (see ManagedDependency).
+final List<Widget Function(BuildContext)> spyglassNonReactiveReaders = [
+  (c) {
+    buildCounts[0]++;
+    return Text(c.get<Svc0>().value.toString());
+  },
+  (c) {
+    buildCounts[1]++;
+    return Text(c.get<Svc1>().value.toString());
+  },
+  (c) {
+    buildCounts[2]++;
+    return Text(c.get<Svc2>().value.toString());
+  },
+  (c) {
+    buildCounts[3]++;
+    return Text(c.get<Svc3>().value.toString());
+  },
+  (c) {
+    buildCounts[4]++;
+    return Text(c.get<Svc4>().value.toString());
+  },
+  (c) {
+    buildCounts[5]++;
+    return Text(c.get<Svc5>().value.toString());
+  },
+  (c) {
+    buildCounts[6]++;
+    return Text(c.get<Svc6>().value.toString());
+  },
+  (c) {
+    buildCounts[7]++;
+    return Text(c.get<Svc7>().value.toString());
+  },
+  (c) {
+    buildCounts[8]++;
+    return Text(c.get<Svc8>().value.toString());
+  },
+  (c) {
+    buildCounts[9]++;
+    return Text(c.get<Svc9>().value.toString());
+  },
+  (c) {
+    buildCounts[10]++;
+    return Text(c.get<Svc10>().value.toString());
+  },
+  (c) {
+    buildCounts[11]++;
+    return Text(c.get<Svc11>().value.toString());
+  },
+  (c) {
+    buildCounts[12]++;
+    return Text(c.get<Svc12>().value.toString());
+  },
+  (c) {
+    buildCounts[13]++;
+    return Text(c.get<Svc13>().value.toString());
+  },
+  (c) {
+    buildCounts[14]++;
+    return Text(c.get<Svc14>().value.toString());
+  },
+  (c) {
+    buildCounts[15]++;
+    return Text(c.get<Svc15>().value.toString());
+  },
+  (c) {
+    buildCounts[16]++;
+    return Text(c.get<Svc16>().value.toString());
+  },
+  (c) {
+    buildCounts[17]++;
+    return Text(c.get<Svc17>().value.toString());
+  },
+  (c) {
+    buildCounts[18]++;
+    return Text(c.get<Svc18>().value.toString());
+  },
+  (c) {
+    buildCounts[19]++;
+    return Text(c.get<Svc19>().value.toString());
+  },
+  (c) {
+    buildCounts[20]++;
+    return Text(c.get<Svc20>().value.toString());
+  },
+  (c) {
+    buildCounts[21]++;
+    return Text(c.get<Svc21>().value.toString());
+  },
+  (c) {
+    buildCounts[22]++;
+    return Text(c.get<Svc22>().value.toString());
+  },
+  (c) {
+    buildCounts[23]++;
+    return Text(c.get<Svc23>().value.toString());
+  },
+  (c) {
+    buildCounts[24]++;
+    return Text(c.get<Svc24>().value.toString());
+  },
+  (c) {
+    buildCounts[25]++;
+    return Text(c.get<Svc25>().value.toString());
+  },
+  (c) {
+    buildCounts[26]++;
+    return Text(c.get<Svc26>().value.toString());
+  },
+  (c) {
+    buildCounts[27]++;
+    return Text(c.get<Svc27>().value.toString());
+  },
+  (c) {
+    buildCounts[28]++;
+    return Text(c.get<Svc28>().value.toString());
+  },
+  (c) {
+    buildCounts[29]++;
+    return Text(c.get<Svc29>().value.toString());
+  },
+  (c) {
+    buildCounts[30]++;
+    return Text(c.get<Svc30>().value.toString());
+  },
+  (c) {
+    buildCounts[31]++;
+    return Text(c.get<Svc31>().value.toString());
+  },
+  (c) {
+    buildCounts[32]++;
+    return Text(c.get<Svc32>().value.toString());
+  },
+  (c) {
+    buildCounts[33]++;
+    return Text(c.get<Svc33>().value.toString());
+  },
+  (c) {
+    buildCounts[34]++;
+    return Text(c.get<Svc34>().value.toString());
+  },
+  (c) {
+    buildCounts[35]++;
+    return Text(c.get<Svc35>().value.toString());
+  },
+  (c) {
+    buildCounts[36]++;
+    return Text(c.get<Svc36>().value.toString());
+  },
+  (c) {
+    buildCounts[37]++;
+    return Text(c.get<Svc37>().value.toString());
+  },
+  (c) {
+    buildCounts[38]++;
+    return Text(c.get<Svc38>().value.toString());
+  },
+  (c) {
+    buildCounts[39]++;
+    return Text(c.get<Svc39>().value.toString());
+  },
+  (c) {
+    buildCounts[40]++;
+    return Text(c.get<Svc40>().value.toString());
+  },
+  (c) {
+    buildCounts[41]++;
+    return Text(c.get<Svc41>().value.toString());
+  },
+  (c) {
+    buildCounts[42]++;
+    return Text(c.get<Svc42>().value.toString());
+  },
+  (c) {
+    buildCounts[43]++;
+    return Text(c.get<Svc43>().value.toString());
+  },
+  (c) {
+    buildCounts[44]++;
+    return Text(c.get<Svc44>().value.toString());
+  },
+  (c) {
+    buildCounts[45]++;
+    return Text(c.get<Svc45>().value.toString());
+  },
+  (c) {
+    buildCounts[46]++;
+    return Text(c.get<Svc46>().value.toString());
+  },
+  (c) {
+    buildCounts[47]++;
+    return Text(c.get<Svc47>().value.toString());
+  },
+  (c) {
+    buildCounts[48]++;
+    return Text(c.get<Svc48>().value.toString());
+  },
+  (c) {
+    buildCounts[49]++;
+    return Text(c.get<Svc49>().value.toString());
+  },
+  (c) {
+    buildCounts[50]++;
+    return Text(c.get<Svc50>().value.toString());
+  },
+  (c) {
+    buildCounts[51]++;
+    return Text(c.get<Svc51>().value.toString());
+  },
+  (c) {
+    buildCounts[52]++;
+    return Text(c.get<Svc52>().value.toString());
+  },
+  (c) {
+    buildCounts[53]++;
+    return Text(c.get<Svc53>().value.toString());
+  },
+  (c) {
+    buildCounts[54]++;
+    return Text(c.get<Svc54>().value.toString());
+  },
+  (c) {
+    buildCounts[55]++;
+    return Text(c.get<Svc55>().value.toString());
+  },
+  (c) {
+    buildCounts[56]++;
+    return Text(c.get<Svc56>().value.toString());
+  },
+  (c) {
+    buildCounts[57]++;
+    return Text(c.get<Svc57>().value.toString());
+  },
+  (c) {
+    buildCounts[58]++;
+    return Text(c.get<Svc58>().value.toString());
+  },
+  (c) {
+    buildCounts[59]++;
+    return Text(c.get<Svc59>().value.toString());
+  },
+  (c) {
+    buildCounts[60]++;
+    return Text(c.get<Svc60>().value.toString());
+  },
+  (c) {
+    buildCounts[61]++;
+    return Text(c.get<Svc61>().value.toString());
+  },
+  (c) {
+    buildCounts[62]++;
+    return Text(c.get<Svc62>().value.toString());
+  },
+  (c) {
+    buildCounts[63]++;
+    return Text(c.get<Svc63>().value.toString());
+  },
+  (c) {
+    buildCounts[64]++;
+    return Text(c.get<Svc64>().value.toString());
+  },
+  (c) {
+    buildCounts[65]++;
+    return Text(c.get<Svc65>().value.toString());
+  },
+  (c) {
+    buildCounts[66]++;
+    return Text(c.get<Svc66>().value.toString());
+  },
+  (c) {
+    buildCounts[67]++;
+    return Text(c.get<Svc67>().value.toString());
+  },
+  (c) {
+    buildCounts[68]++;
+    return Text(c.get<Svc68>().value.toString());
+  },
+  (c) {
+    buildCounts[69]++;
+    return Text(c.get<Svc69>().value.toString());
+  },
+  (c) {
+    buildCounts[70]++;
+    return Text(c.get<Svc70>().value.toString());
+  },
+  (c) {
+    buildCounts[71]++;
+    return Text(c.get<Svc71>().value.toString());
+  },
+  (c) {
+    buildCounts[72]++;
+    return Text(c.get<Svc72>().value.toString());
+  },
+  (c) {
+    buildCounts[73]++;
+    return Text(c.get<Svc73>().value.toString());
+  },
+  (c) {
+    buildCounts[74]++;
+    return Text(c.get<Svc74>().value.toString());
+  },
+  (c) {
+    buildCounts[75]++;
+    return Text(c.get<Svc75>().value.toString());
+  },
+  (c) {
+    buildCounts[76]++;
+    return Text(c.get<Svc76>().value.toString());
+  },
+  (c) {
+    buildCounts[77]++;
+    return Text(c.get<Svc77>().value.toString());
+  },
+  (c) {
+    buildCounts[78]++;
+    return Text(c.get<Svc78>().value.toString());
+  },
+  (c) {
+    buildCounts[79]++;
+    return Text(c.get<Svc79>().value.toString());
+  },
+  (c) {
+    buildCounts[80]++;
+    return Text(c.get<Svc80>().value.toString());
+  },
+  (c) {
+    buildCounts[81]++;
+    return Text(c.get<Svc81>().value.toString());
+  },
+  (c) {
+    buildCounts[82]++;
+    return Text(c.get<Svc82>().value.toString());
+  },
+  (c) {
+    buildCounts[83]++;
+    return Text(c.get<Svc83>().value.toString());
+  },
+  (c) {
+    buildCounts[84]++;
+    return Text(c.get<Svc84>().value.toString());
+  },
+  (c) {
+    buildCounts[85]++;
+    return Text(c.get<Svc85>().value.toString());
+  },
+  (c) {
+    buildCounts[86]++;
+    return Text(c.get<Svc86>().value.toString());
+  },
+  (c) {
+    buildCounts[87]++;
+    return Text(c.get<Svc87>().value.toString());
+  },
+  (c) {
+    buildCounts[88]++;
+    return Text(c.get<Svc88>().value.toString());
+  },
+  (c) {
+    buildCounts[89]++;
+    return Text(c.get<Svc89>().value.toString());
+  },
+  (c) {
+    buildCounts[90]++;
+    return Text(c.get<Svc90>().value.toString());
+  },
+  (c) {
+    buildCounts[91]++;
+    return Text(c.get<Svc91>().value.toString());
+  },
+  (c) {
+    buildCounts[92]++;
+    return Text(c.get<Svc92>().value.toString());
+  },
+  (c) {
+    buildCounts[93]++;
+    return Text(c.get<Svc93>().value.toString());
+  },
+  (c) {
+    buildCounts[94]++;
+    return Text(c.get<Svc94>().value.toString());
+  },
+  (c) {
+    buildCounts[95]++;
+    return Text(c.get<Svc95>().value.toString());
+  },
+  (c) {
+    buildCounts[96]++;
+    return Text(c.get<Svc96>().value.toString());
+  },
+  (c) {
+    buildCounts[97]++;
+    return Text(c.get<Svc97>().value.toString());
+  },
+  (c) {
+    buildCounts[98]++;
+    return Text(c.get<Svc98>().value.toString());
+  },
+  (c) {
+    buildCounts[99]++;
+    return Text(c.get<Svc99>().value.toString());
+  },
+];
+
+final List<Widget Function(BuildContext)> providerNonReactiveReaders = [
+  (c) {
+    buildCounts[0]++;
+    return Text(ReadContext(c).read<Svc0>().value.toString());
+  },
+  (c) {
+    buildCounts[1]++;
+    return Text(ReadContext(c).read<Svc1>().value.toString());
+  },
+  (c) {
+    buildCounts[2]++;
+    return Text(ReadContext(c).read<Svc2>().value.toString());
+  },
+  (c) {
+    buildCounts[3]++;
+    return Text(ReadContext(c).read<Svc3>().value.toString());
+  },
+  (c) {
+    buildCounts[4]++;
+    return Text(ReadContext(c).read<Svc4>().value.toString());
+  },
+  (c) {
+    buildCounts[5]++;
+    return Text(ReadContext(c).read<Svc5>().value.toString());
+  },
+  (c) {
+    buildCounts[6]++;
+    return Text(ReadContext(c).read<Svc6>().value.toString());
+  },
+  (c) {
+    buildCounts[7]++;
+    return Text(ReadContext(c).read<Svc7>().value.toString());
+  },
+  (c) {
+    buildCounts[8]++;
+    return Text(ReadContext(c).read<Svc8>().value.toString());
+  },
+  (c) {
+    buildCounts[9]++;
+    return Text(ReadContext(c).read<Svc9>().value.toString());
+  },
+  (c) {
+    buildCounts[10]++;
+    return Text(ReadContext(c).read<Svc10>().value.toString());
+  },
+  (c) {
+    buildCounts[11]++;
+    return Text(ReadContext(c).read<Svc11>().value.toString());
+  },
+  (c) {
+    buildCounts[12]++;
+    return Text(ReadContext(c).read<Svc12>().value.toString());
+  },
+  (c) {
+    buildCounts[13]++;
+    return Text(ReadContext(c).read<Svc13>().value.toString());
+  },
+  (c) {
+    buildCounts[14]++;
+    return Text(ReadContext(c).read<Svc14>().value.toString());
+  },
+  (c) {
+    buildCounts[15]++;
+    return Text(ReadContext(c).read<Svc15>().value.toString());
+  },
+  (c) {
+    buildCounts[16]++;
+    return Text(ReadContext(c).read<Svc16>().value.toString());
+  },
+  (c) {
+    buildCounts[17]++;
+    return Text(ReadContext(c).read<Svc17>().value.toString());
+  },
+  (c) {
+    buildCounts[18]++;
+    return Text(ReadContext(c).read<Svc18>().value.toString());
+  },
+  (c) {
+    buildCounts[19]++;
+    return Text(ReadContext(c).read<Svc19>().value.toString());
+  },
+  (c) {
+    buildCounts[20]++;
+    return Text(ReadContext(c).read<Svc20>().value.toString());
+  },
+  (c) {
+    buildCounts[21]++;
+    return Text(ReadContext(c).read<Svc21>().value.toString());
+  },
+  (c) {
+    buildCounts[22]++;
+    return Text(ReadContext(c).read<Svc22>().value.toString());
+  },
+  (c) {
+    buildCounts[23]++;
+    return Text(ReadContext(c).read<Svc23>().value.toString());
+  },
+  (c) {
+    buildCounts[24]++;
+    return Text(ReadContext(c).read<Svc24>().value.toString());
+  },
+  (c) {
+    buildCounts[25]++;
+    return Text(ReadContext(c).read<Svc25>().value.toString());
+  },
+  (c) {
+    buildCounts[26]++;
+    return Text(ReadContext(c).read<Svc26>().value.toString());
+  },
+  (c) {
+    buildCounts[27]++;
+    return Text(ReadContext(c).read<Svc27>().value.toString());
+  },
+  (c) {
+    buildCounts[28]++;
+    return Text(ReadContext(c).read<Svc28>().value.toString());
+  },
+  (c) {
+    buildCounts[29]++;
+    return Text(ReadContext(c).read<Svc29>().value.toString());
+  },
+  (c) {
+    buildCounts[30]++;
+    return Text(ReadContext(c).read<Svc30>().value.toString());
+  },
+  (c) {
+    buildCounts[31]++;
+    return Text(ReadContext(c).read<Svc31>().value.toString());
+  },
+  (c) {
+    buildCounts[32]++;
+    return Text(ReadContext(c).read<Svc32>().value.toString());
+  },
+  (c) {
+    buildCounts[33]++;
+    return Text(ReadContext(c).read<Svc33>().value.toString());
+  },
+  (c) {
+    buildCounts[34]++;
+    return Text(ReadContext(c).read<Svc34>().value.toString());
+  },
+  (c) {
+    buildCounts[35]++;
+    return Text(ReadContext(c).read<Svc35>().value.toString());
+  },
+  (c) {
+    buildCounts[36]++;
+    return Text(ReadContext(c).read<Svc36>().value.toString());
+  },
+  (c) {
+    buildCounts[37]++;
+    return Text(ReadContext(c).read<Svc37>().value.toString());
+  },
+  (c) {
+    buildCounts[38]++;
+    return Text(ReadContext(c).read<Svc38>().value.toString());
+  },
+  (c) {
+    buildCounts[39]++;
+    return Text(ReadContext(c).read<Svc39>().value.toString());
+  },
+  (c) {
+    buildCounts[40]++;
+    return Text(ReadContext(c).read<Svc40>().value.toString());
+  },
+  (c) {
+    buildCounts[41]++;
+    return Text(ReadContext(c).read<Svc41>().value.toString());
+  },
+  (c) {
+    buildCounts[42]++;
+    return Text(ReadContext(c).read<Svc42>().value.toString());
+  },
+  (c) {
+    buildCounts[43]++;
+    return Text(ReadContext(c).read<Svc43>().value.toString());
+  },
+  (c) {
+    buildCounts[44]++;
+    return Text(ReadContext(c).read<Svc44>().value.toString());
+  },
+  (c) {
+    buildCounts[45]++;
+    return Text(ReadContext(c).read<Svc45>().value.toString());
+  },
+  (c) {
+    buildCounts[46]++;
+    return Text(ReadContext(c).read<Svc46>().value.toString());
+  },
+  (c) {
+    buildCounts[47]++;
+    return Text(ReadContext(c).read<Svc47>().value.toString());
+  },
+  (c) {
+    buildCounts[48]++;
+    return Text(ReadContext(c).read<Svc48>().value.toString());
+  },
+  (c) {
+    buildCounts[49]++;
+    return Text(ReadContext(c).read<Svc49>().value.toString());
+  },
+  (c) {
+    buildCounts[50]++;
+    return Text(ReadContext(c).read<Svc50>().value.toString());
+  },
+  (c) {
+    buildCounts[51]++;
+    return Text(ReadContext(c).read<Svc51>().value.toString());
+  },
+  (c) {
+    buildCounts[52]++;
+    return Text(ReadContext(c).read<Svc52>().value.toString());
+  },
+  (c) {
+    buildCounts[53]++;
+    return Text(ReadContext(c).read<Svc53>().value.toString());
+  },
+  (c) {
+    buildCounts[54]++;
+    return Text(ReadContext(c).read<Svc54>().value.toString());
+  },
+  (c) {
+    buildCounts[55]++;
+    return Text(ReadContext(c).read<Svc55>().value.toString());
+  },
+  (c) {
+    buildCounts[56]++;
+    return Text(ReadContext(c).read<Svc56>().value.toString());
+  },
+  (c) {
+    buildCounts[57]++;
+    return Text(ReadContext(c).read<Svc57>().value.toString());
+  },
+  (c) {
+    buildCounts[58]++;
+    return Text(ReadContext(c).read<Svc58>().value.toString());
+  },
+  (c) {
+    buildCounts[59]++;
+    return Text(ReadContext(c).read<Svc59>().value.toString());
+  },
+  (c) {
+    buildCounts[60]++;
+    return Text(ReadContext(c).read<Svc60>().value.toString());
+  },
+  (c) {
+    buildCounts[61]++;
+    return Text(ReadContext(c).read<Svc61>().value.toString());
+  },
+  (c) {
+    buildCounts[62]++;
+    return Text(ReadContext(c).read<Svc62>().value.toString());
+  },
+  (c) {
+    buildCounts[63]++;
+    return Text(ReadContext(c).read<Svc63>().value.toString());
+  },
+  (c) {
+    buildCounts[64]++;
+    return Text(ReadContext(c).read<Svc64>().value.toString());
+  },
+  (c) {
+    buildCounts[65]++;
+    return Text(ReadContext(c).read<Svc65>().value.toString());
+  },
+  (c) {
+    buildCounts[66]++;
+    return Text(ReadContext(c).read<Svc66>().value.toString());
+  },
+  (c) {
+    buildCounts[67]++;
+    return Text(ReadContext(c).read<Svc67>().value.toString());
+  },
+  (c) {
+    buildCounts[68]++;
+    return Text(ReadContext(c).read<Svc68>().value.toString());
+  },
+  (c) {
+    buildCounts[69]++;
+    return Text(ReadContext(c).read<Svc69>().value.toString());
+  },
+  (c) {
+    buildCounts[70]++;
+    return Text(ReadContext(c).read<Svc70>().value.toString());
+  },
+  (c) {
+    buildCounts[71]++;
+    return Text(ReadContext(c).read<Svc71>().value.toString());
+  },
+  (c) {
+    buildCounts[72]++;
+    return Text(ReadContext(c).read<Svc72>().value.toString());
+  },
+  (c) {
+    buildCounts[73]++;
+    return Text(ReadContext(c).read<Svc73>().value.toString());
+  },
+  (c) {
+    buildCounts[74]++;
+    return Text(ReadContext(c).read<Svc74>().value.toString());
+  },
+  (c) {
+    buildCounts[75]++;
+    return Text(ReadContext(c).read<Svc75>().value.toString());
+  },
+  (c) {
+    buildCounts[76]++;
+    return Text(ReadContext(c).read<Svc76>().value.toString());
+  },
+  (c) {
+    buildCounts[77]++;
+    return Text(ReadContext(c).read<Svc77>().value.toString());
+  },
+  (c) {
+    buildCounts[78]++;
+    return Text(ReadContext(c).read<Svc78>().value.toString());
+  },
+  (c) {
+    buildCounts[79]++;
+    return Text(ReadContext(c).read<Svc79>().value.toString());
+  },
+  (c) {
+    buildCounts[80]++;
+    return Text(ReadContext(c).read<Svc80>().value.toString());
+  },
+  (c) {
+    buildCounts[81]++;
+    return Text(ReadContext(c).read<Svc81>().value.toString());
+  },
+  (c) {
+    buildCounts[82]++;
+    return Text(ReadContext(c).read<Svc82>().value.toString());
+  },
+  (c) {
+    buildCounts[83]++;
+    return Text(ReadContext(c).read<Svc83>().value.toString());
+  },
+  (c) {
+    buildCounts[84]++;
+    return Text(ReadContext(c).read<Svc84>().value.toString());
+  },
+  (c) {
+    buildCounts[85]++;
+    return Text(ReadContext(c).read<Svc85>().value.toString());
+  },
+  (c) {
+    buildCounts[86]++;
+    return Text(ReadContext(c).read<Svc86>().value.toString());
+  },
+  (c) {
+    buildCounts[87]++;
+    return Text(ReadContext(c).read<Svc87>().value.toString());
+  },
+  (c) {
+    buildCounts[88]++;
+    return Text(ReadContext(c).read<Svc88>().value.toString());
+  },
+  (c) {
+    buildCounts[89]++;
+    return Text(ReadContext(c).read<Svc89>().value.toString());
+  },
+  (c) {
+    buildCounts[90]++;
+    return Text(ReadContext(c).read<Svc90>().value.toString());
+  },
+  (c) {
+    buildCounts[91]++;
+    return Text(ReadContext(c).read<Svc91>().value.toString());
+  },
+  (c) {
+    buildCounts[92]++;
+    return Text(ReadContext(c).read<Svc92>().value.toString());
+  },
+  (c) {
+    buildCounts[93]++;
+    return Text(ReadContext(c).read<Svc93>().value.toString());
+  },
+  (c) {
+    buildCounts[94]++;
+    return Text(ReadContext(c).read<Svc94>().value.toString());
+  },
+  (c) {
+    buildCounts[95]++;
+    return Text(ReadContext(c).read<Svc95>().value.toString());
+  },
+  (c) {
+    buildCounts[96]++;
+    return Text(ReadContext(c).read<Svc96>().value.toString());
+  },
+  (c) {
+    buildCounts[97]++;
+    return Text(ReadContext(c).read<Svc97>().value.toString());
+  },
+  (c) {
+    buildCounts[98]++;
+    return Text(ReadContext(c).read<Svc98>().value.toString());
+  },
+  (c) {
+    buildCounts[99]++;
+    return Text(ReadContext(c).read<Svc99>().value.toString());
+  },
+];

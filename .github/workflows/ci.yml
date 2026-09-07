@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  checks:
+    name: ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [format, analyze, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Add melos to PATH
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          printf '#!/usr/bin/env bash\nexec dart run melos "$@"\n' > "$RUNNER_TEMP/bin/melos"
+          chmod +x "$RUNNER_TEMP/bin/melos"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - run: melos run ${{ matrix.task }}

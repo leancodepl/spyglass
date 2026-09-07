@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart' hide WatchContext;
 import 'package:flutter_multi_provider/data_cubit.dart';
-import 'package:flutter_spyglass/flutter_spyglass.dart';
+import 'package:flutter_spyglass_bloc/flutter_spyglass_bloc.dart';
 
 void main() {
   runApp(const MainApp());
@@ -15,10 +14,7 @@ class MainApp extends StatelessWidget {
     return DepsProvider(
       register: [
         Dependency.value('Hello World!'),
-        Dependency<DataCubit>(
-          create: (_) => DataCubit(),
-          dispose: (cubit) => cubit.close(),
-        ),
+        BlocDependency<DataCubit>((_, __) => DataCubit()),
       ],
       child: Builder(builder: (context) {
         return MaterialApp(
@@ -27,10 +23,11 @@ class MainApp extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  BlocBuilder<DataCubit, DataCubitState>(
-                    bloc: context.observe(),
-                    builder: (context, state) {
-                      final stateDescription = switch (state.connectionState) {
+                  Builder(
+                    builder: (context) {
+                      final state = context.watch<DataCubit>().state;
+                      final String? stateDescription =
+                          switch (state.connectionState) {
                         ConnectionState.none => 'Idle',
                         ConnectionState.waiting => 'Waiting',
                         ConnectionState.active => 'Waiting',

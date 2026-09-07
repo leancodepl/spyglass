@@ -4,51 +4,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:spyglass/spyglass.dart';
 
-/// Obtain the nearest [Deps] scope.
-Deps useDeps() {
-  return DepsProvider.of(useContext());
-}
-
-/// Watch the specified dependency.
-T useDependency<T extends Object>() {
-  final deps = useDeps();
-
-  return useStream(deps.observe<T>(), initialData: deps.get<T>()).requireData;
-}
-
-/// Register dependencies on mount; Unregister on unmount. What [DepsProvider]
-/// does with its [DepsProvider.register] prop but in a hook form.
-void useRegisterDeps(
-  List<Dependency<Object>> dependencies, [
-  List<Object?>? keys,
-]) {
-  final deps = useDeps();
-
-  useEffect(
-    () {
-      final unregister = deps.addMany(dependencies);
-      return unregister;
-    },
-    keys ?? dependencies.map((e) => e.key).toList(),
-  );
-}
-
-/// Shortcuts for obtaining Deps values from BuildContext.
-extension DepsContext on BuildContext {
-  /// Obtain the nearest [Deps] scope.
-  Deps get deps => DepsProvider.of(this);
-
-  /// Read the value of a dependency without listening to changes.
-  T get<T extends Object>() => deps.get<T>();
-
-  /// Watch the value of a dependency and rebuild the widget when it changes.
-  T observe<T extends Object>() => DepsProvider.observe<T>(this);
-
-  T? maybeObserve<T extends Object>() => DepsProvider.maybeObserve<T>(this);
-}
+import 'deps_context.dart';
+import 'deps_diagnostics.dart';
 
 /// Register on mount;  Unregister on unmount.
 class DepsProvider extends HookWidget {
+  /// Introduces a scope and/or registers [register] - see the fields below.
   const DepsProvider({
     super.key,
     this.deps,
@@ -60,12 +21,12 @@ class DepsProvider extends HookWidget {
 
   /// Provide a custom [Deps] instance that dependencies listed in [register]
   /// should be added to. This will also influence the provided scope to the
-  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.observe].
+  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch].
   final Deps? deps;
 
   /// A list of dependencies to register on mount and unregister on unmount.
   /// These dependencies will be bound to this widget, effectively.
-  final Iterable<Dependency<Object>>? register;
+  final Iterable<Registerable>? register;
 
   /// By default [DepsProvider] introduces a new scope. Set this to `false` to
   /// just register new dependencies in [register].
@@ -85,23 +46,70 @@ class DepsProvider extends HookWidget {
         globalDeps;
   }
 
-  /// Observe the value of a dependency specified by [T].
-  static T observe<T extends Object>(BuildContext context) {
+  /// Watch a dependency fully - see [DepsContext.watch].
+  static T watch<T extends Object>(BuildContext context) {
     return context
-        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: T)!
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(
+            aspect: (T, const _ObserveOptions(observeState: true)))!
         .deps
         .get<T>();
   }
 
-  static T? maybeObserve<T extends Object>(BuildContext context) {
-    final deps = context
-        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: T)!
-        .deps;
-    if (deps.isRegistered<T>()) {
-      return deps.tryGet<T>();
-    } else {
-      return null;
-    }
+  /// Like [watch], but returns `null` instead of throwing when [T] isn't
+  /// registered.
+  static T? maybeWatch<T extends Object>(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(
+            aspect: (T, const _ObserveOptions(observeState: true)))!
+        .deps
+        .tryGet<T>();
+  }
+
+  /// Watch a dependency's registration only - see
+  /// [DepsContext.watchInstance].
+  static T watchInstance<T extends Object>(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(
+            aspect: (T, const _ObserveOptions(observeState: false)))!
+        .deps
+        .get<T>();
+  }
+
+  /// Like [watchInstance], but returns `null` instead of throwing when [T]
+  /// isn't registered.
+  static T? maybeWatchInstance<T extends Object>(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(
+            aspect: (T, const _ObserveOptions(observeState: false)))!
+        .deps
+        .tryGet<T>();
+  }
+
+  /// Select a derived value - see [DepsContext.select].
+  static R select<T extends Object, R>(
+      BuildContext context, Selector<T, R> selector) {
+    final value = context
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: (
+          T,
+          _ObserveOptions(observeState: true, selector: selector)
+        ))!
+        .deps
+        .get<T>();
+    return selector(value);
+  }
+
+  /// Like [select], but returns `null` instead of throwing when [T] isn't
+  /// registered.
+  static R? maybeSelect<T extends Object, R>(
+      BuildContext context, Selector<T, R> selector) {
+    final value = context
+        .dependOnInheritedWidgetOfExactType<_DepsInherited>(aspect: (
+          T,
+          _ObserveOptions(observeState: true, selector: selector)
+        ))!
+        .deps
+        .tryGet<T>();
+    return value != null ? selector(value) : null;
   }
 
   @override
@@ -129,17 +137,46 @@ class DepsProvider extends HookWidget {
 
     final register = this.register;
 
+    // [Dependency] is meant to be a lightweight, cheaply-recreated-every-
+    // build config - like a [Widget] - so recreating it here shouldn't tear
+    // down the service it describes by default. [Deps.add] already leaves
+    // an entry alone when it's registered again under an unchanged
+    // [Dependency.cacheKey] (including both being null) - like Element
+    // reusing a State when a new Widget arrives with the same type+key -
+    // so calling it for every current entry, every build, is enough: keys
+    // that didn't actually change are simply left alone by add() itself.
+    // We still need to watch keys ourselves for the one thing add() can't
+    // do - removing a key that disappeared from the list entirely.
+    final registeredKeys = useRef<Set<DependencyKey>>(const {});
+    final previousDeps = usePrevious(deps);
+
+    useEffect(() {
+      if (previousDeps != null && !identical(previousDeps, deps)) {
+        // Switched to a different Deps instance entirely - whatever we
+        // registered belongs to the old one, not this one.
+        registeredKeys.value.forEach(previousDeps.remove);
+        registeredKeys.value = const {};
+      }
+
+      final currentByKey = <DependencyKey, Dependency<Object>>{
+        for (final registerable in register ?? const <Registerable>[])
+          for (final dependency in registerable.dependencies)
+            dependency.key: dependency,
+      };
+      final currentKeys = currentByKey.keys.toSet();
+
+      registeredKeys.value.difference(currentKeys).forEach(deps.remove);
+      deps.addAll(currentByKey.values);
+
+      registeredKeys.value = currentKeys;
+      return null;
+    });
+
     useEffect(
-      () {
-        if (register == null) {
-          return null;
-        }
-
-        final unregister = deps.addMany(register);
-
-        return unregister;
+      () => () {
+        registeredKeys.value.forEach(deps.remove);
       },
-      [deps, ...?register?.map((e) => e.key)],
+      [deps],
     );
 
     return _DepsInherited(
@@ -174,6 +211,18 @@ class _DepsInherited extends InheritedWidget {
   InheritedElement createElement() {
     return _DepsElement(this);
   }
+
+  /// Surfaces [deps] - its own registered dependencies, and (with
+  /// [spyglassDiagnosticsMode] enabled) every descendant scope - in the
+  /// widget inspector/`debugDumpApp()`. This is on the internal
+  /// `_DepsInherited` node one level below [DepsProvider], not
+  /// [DepsProvider] itself - the live scope (possibly a fresh [Deps.fork])
+  /// is only known once `build()` runs, and that's where it lives. In
+  /// DevTools, turn off "Show only widgets created by user" to see it.
+  @override
+  List<DiagnosticsNode> debugDescribeChildren() => [
+        deps.toDiagnosticsNode(name: 'deps'),
+      ];
 }
 
 class _DepsElement extends InheritedElement {
@@ -182,17 +231,37 @@ class _DepsElement extends InheritedElement {
   @override
   _DepsInherited get widget => super.widget as _DepsInherited;
 
-  final Map<(Element, Type), StreamSubscription<void>> _subscriptions = {};
+  /// One real [Deps.watch]/[Deps.watchInstance] subscription per (type,
+  /// observeState) pair, shared by every dependent watching that
+  /// combination - not one per dependent. Keyed on observeState too since
+  /// two dependents can ask for the same type with different observeState
+  /// values.
+  final Map<(Type, bool), StreamSubscription<Object>> _subscriptions = {};
+
+  /// [Deps.watch]/[Deps.watchInstance] always emit the current value
+  /// immediately on subscribe, even though whoever caused a (type, observeState)
+  /// subscription to be created just read that exact value synchronously in
+  /// their own build. Tracks which subscriptions haven't delivered that
+  /// first, nothing-actually-changed value yet, so [_dispatch] can skip
+  /// rebuilding anyone for it - otherwise every dependency observed at all
+  /// leaves behind one spurious rebuild that gets silently cashed in on
+  /// whatever the next unrelated pump happens to be.
+  final Set<(Type, bool)> _pendingFirstEmission = {};
+
+  /// Which dependents are watching a given type, and their per-dependent
+  /// selector state - so dispatching a value only touches watchers of that
+  /// type instead of every dependent of this element.
+  final Map<Type, Map<Element, _Watcher>> _watchersByType = {};
 
   @override
   void updated(_DepsInherited oldWidget) {
     if (widget.deps != oldWidget.deps) {
-      for (final MapEntry(:key, value: sub) in _subscriptions.entries) {
+      for (final sub in _subscriptions.values) {
         sub.cancel();
-        _subscriptions[key] = widget.deps.observe(key.$2).listen((e) {
-          key.$1.didChangeDependencies();
-        });
       }
+      _subscriptions.clear();
+      _pendingFirstEmission.clear();
+      _watchersByType.clear();
     }
     super.updated(oldWidget);
   }
@@ -207,24 +276,103 @@ class _DepsElement extends InheritedElement {
     if (value == null) {
       return;
     }
-    if (value is! Type) {
-      throw ArgumentError.value(value, 'value', 'value must be a Type');
+    if (value is! (Type, _ObserveOptions)) {
+      throw ArgumentError.value(
+          value, 'value', 'value must be a (Type, _ObserveOptions)');
     }
-    _subscriptions[(dependent, value)]?.cancel();
-    _subscriptions[(dependent, value)] = widget.deps.observe(value).listen((e) {
-      dependent.markNeedsBuild();
+    final (type, options) = value;
+
+    final watchers = _watchersByType.putIfAbsent(type, () => {});
+    if (watchers.containsKey(dependent)) {
+      // Already set up - matches the old map's `??=`, which likewise only
+      // ever honored the first (dependent, type) registration.
+      return;
+    }
+    watchers[dependent] = _Watcher(
+      observeState: options.observeState,
+      selector: options.selector,
+    );
+
+    final subscriptionKey = (type, options.observeState);
+    _subscriptions.putIfAbsent(subscriptionKey, () {
+      _pendingFirstEmission.add(subscriptionKey);
+      final stream = options.observeState
+          ? widget.deps.watch(key: type)
+          : widget.deps.watchInstance(key: type);
+      return stream.listen((value) => _dispatch(subscriptionKey, value));
     });
+  }
+
+  void _dispatch((Type, bool) subscriptionKey, Object value) {
+    // Selector watchers already skip their own first-observed value via
+    // hasSelected below (whatever that happens to be, first-ever or not),
+    // so this only needs to protect non-selector watchers, which have no
+    // baseline tracking of their own.
+    final isFirstEmission = _pendingFirstEmission.remove(subscriptionKey);
+
+    final (type, observeState) = subscriptionKey;
+    final watchers = _watchersByType[type];
+    if (watchers == null) {
+      return;
+    }
+    for (final MapEntry(key: dependent, value: watcher) in watchers.entries) {
+      if (watcher.observeState != observeState) {
+        continue;
+      }
+      if (watcher.selector case final selector?) {
+        // reason: selector is stored as a bare Function to keep _Watcher
+        // non-generic, mirroring the dynamic cast the old per-dependent
+        // pipeline already did.
+        final selected = (selector as dynamic)(value);
+        if (!watcher.hasSelected) {
+          // First value after (re)subscribing just sets the baseline - like
+          // pairwise() not emitting until its second item.
+          watcher
+            ..hasSelected = true
+            ..lastSelected = selected;
+          continue;
+        }
+        if (selected == watcher.lastSelected) {
+          continue;
+        }
+        watcher.lastSelected = selected;
+      } else if (isFirstEmission) {
+        continue;
+      }
+      dependent.markNeedsBuild();
+    }
   }
 
   @override
   void removeDependent(Element dependent) {
-    for (final key in _subscriptions.keys) {
-      if (key.$1 == dependent) {
-        _subscriptions[key]?.cancel();
-        _subscriptions.remove(key);
+    for (final type in [..._watchersByType.keys]) {
+      final watchers = _watchersByType[type];
+      if (watchers == null || watchers.remove(dependent) == null) {
+        continue;
       }
+      _pruneSubscriptionsIfUnused(type, watchers);
     }
     super.removeDependent(dependent);
+  }
+
+  void _pruneSubscriptionsIfUnused(Type type, Map<Element, _Watcher> watchers) {
+    if (watchers.isEmpty) {
+      _watchersByType.remove(type);
+      _subscriptions.remove((type, true))?.cancel();
+      _subscriptions.remove((type, false))?.cancel();
+      _pendingFirstEmission
+        ..remove((type, true))
+        ..remove((type, false));
+      return;
+    }
+    if (!watchers.values.any((w) => w.observeState)) {
+      _subscriptions.remove((type, true))?.cancel();
+      _pendingFirstEmission.remove((type, true));
+    }
+    if (!watchers.values.any((w) => !w.observeState)) {
+      _subscriptions.remove((type, false))?.cancel();
+      _pendingFirstEmission.remove((type, false));
+    }
   }
 
   @override
@@ -232,6 +380,26 @@ class _DepsElement extends InheritedElement {
     for (final sub in _subscriptions.values) {
       sub.cancel();
     }
+    _subscriptions.clear();
+    _pendingFirstEmission.clear();
+    _watchersByType.clear();
     super.unmount();
   }
+}
+
+class _Watcher {
+  _Watcher({required this.observeState, this.selector});
+
+  final bool observeState;
+  final Function? selector;
+  bool hasSelected = false;
+  Object? lastSelected;
+}
+
+@immutable
+class _ObserveOptions {
+  const _ObserveOptions({required this.observeState, this.selector});
+
+  final bool observeState;
+  final Function? selector;
 }
