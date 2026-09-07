@@ -1,14 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:spyglass/spyglass.dart';
 
 import 'deps_context.dart';
 import 'deps_diagnostics.dart';
 
 /// Register on mount;  Unregister on unmount.
-class DepsProvider extends HookWidget {
+class DepsProvider extends StatefulWidget {
   /// Introduces a scope and/or registers [register] - see the fields below.
   const DepsProvider({
     super.key,
@@ -113,29 +112,62 @@ class DepsProvider extends HookWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final parentScope = of(context);
-    // 1. Use deps from props
-    // 2a. If should introduce new scope fork parent scope
-    // 2b. Otherwise use parent scope
-    final deps = useMemoized(
-      () => this.deps ?? (introduceScope ? parentScope.fork() : parentScope),
-      [
-        this.deps,
-        parentScope,
-      ],
-    );
-    useEffect(
-      () {
-        if (introduceScope && this.deps == null) {
-          return deps.dispose;
-        }
-        return null;
-      },
-      [deps, introduceScope, this.deps],
-    );
+  State<DepsProvider> createState() => _DepsProviderState();
+}
 
-    final register = this.register;
+class _DepsProviderState extends State<DepsProvider> {
+  // The scope currently provided to descendants - either `widget.deps`, a
+  // fresh fork of the parent scope, or the parent scope itself, depending on
+  // `widget.deps`/`widget.introduceScope`.
+  Deps? _deps;
+
+  // Non-null exactly when this widget forked its own scope (rather than
+  // being handed one via `widget.deps`, or passing the parent scope
+  // through) and therefore owns its lifecycle.
+  Deps? _ownedDeps;
+
+  Deps? _lastDepsProp;
+  Deps? _lastParentScope;
+  bool _lastIntroduceScope = false;
+
+  Set<DependencyKey> _registeredKeys = const {};
+  late Deps _registeredIn;
+
+  void _updateDeps(Deps parentScope) {
+    final depsProp = widget.deps;
+    final introduceScope = widget.introduceScope;
+
+    final unchanged = _deps != null &&
+        identical(_lastDepsProp, depsProp) &&
+        identical(_lastParentScope, parentScope) &&
+        _lastIntroduceScope == introduceScope;
+    if (unchanged) {
+      return;
+    }
+
+    final previouslyOwned = _ownedDeps;
+
+    _deps = depsProp ?? (introduceScope ? parentScope.fork() : parentScope);
+    _ownedDeps = (introduceScope && depsProp == null) ? _deps : null;
+
+    _lastDepsProp = depsProp;
+    _lastParentScope = parentScope;
+    _lastIntroduceScope = introduceScope;
+
+    if (previouslyOwned != null && !identical(previouslyOwned, _ownedDeps)) {
+      previouslyOwned.dispose();
+    }
+  }
+
+  void _updateRegistrations() {
+    final deps = _deps!;
+
+    if (_registeredKeys.isNotEmpty && !identical(_registeredIn, deps)) {
+      // Switched to a different Deps instance entirely - whatever we
+      // registered belongs to the old one, not this one.
+      _registeredKeys.forEach(_registeredIn.remove);
+      _registeredKeys = const {};
+    }
 
     // [Dependency] is meant to be a lightweight, cheaply-recreated-every-
     // build config - like a [Widget] - so recreating it here shouldn't tear
@@ -147,44 +179,39 @@ class DepsProvider extends HookWidget {
     // that didn't actually change are simply left alone by add() itself.
     // We still need to watch keys ourselves for the one thing add() can't
     // do - removing a key that disappeared from the list entirely.
-    final registeredKeys = useRef<Set<DependencyKey>>(const {});
-    final previousDeps = usePrevious(deps);
+    final currentByKey = <DependencyKey, Dependency<Object>>{
+      for (final registerable in widget.register ?? const <Registerable>[])
+        for (final dependency in registerable.dependencies)
+          dependency.key: dependency,
+    };
+    final currentKeys = currentByKey.keys.toSet();
 
-    useEffect(() {
-      if (previousDeps != null && !identical(previousDeps, deps)) {
-        // Switched to a different Deps instance entirely - whatever we
-        // registered belongs to the old one, not this one.
-        registeredKeys.value.forEach(previousDeps.remove);
-        registeredKeys.value = const {};
-      }
+    _registeredKeys.difference(currentKeys).forEach(deps.remove);
+    deps.addAll(currentByKey.values);
 
-      final currentByKey = <DependencyKey, Dependency<Object>>{
-        for (final registerable in register ?? const <Registerable>[])
-          for (final dependency in registerable.dependencies)
-            dependency.key: dependency,
-      };
-      final currentKeys = currentByKey.keys.toSet();
+    _registeredKeys = currentKeys;
+    _registeredIn = deps;
+  }
 
-      registeredKeys.value.difference(currentKeys).forEach(deps.remove);
-      deps.addAll(currentByKey.values);
+  @override
+  void dispose() {
+    _registeredKeys.forEach(_registeredIn.remove);
+    _ownedDeps?.dispose();
+    super.dispose();
+  }
 
-      registeredKeys.value = currentKeys;
-      return null;
-    });
-
-    useEffect(
-      () => () {
-        registeredKeys.value.forEach(deps.remove);
-      },
-      [deps],
-    );
+  @override
+  Widget build(BuildContext context) {
+    final parentScope = DepsProvider.of(context);
+    _updateDeps(parentScope);
+    _updateRegistrations();
 
     return _DepsInherited(
-      deps: deps,
+      deps: _deps!,
       child: Builder(
         builder: (context) {
-          var result = child;
-          if (builder case final builder?) {
+          var result = widget.child;
+          if (widget.builder case final builder?) {
             result = builder(context, result);
           }
           return result ?? const SizedBox();

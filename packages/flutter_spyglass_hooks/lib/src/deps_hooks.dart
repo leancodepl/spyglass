@@ -1,7 +1,5 @@
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:spyglass/spyglass.dart';
-
-import 'deps_provider.dart';
+import 'package:flutter_spyglass/flutter_spyglass.dart';
 
 /// Obtain the nearest [Deps] scope.
 Deps useDeps() {
