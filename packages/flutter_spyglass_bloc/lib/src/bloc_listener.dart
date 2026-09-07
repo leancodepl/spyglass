@@ -13,15 +13,18 @@ typedef BlocWidgetListener<TState> = void Function(
 /// Signature for the `listenWhen` function which takes the previous `state`
 /// and the current `state` and is responsible for returning a [bool] which
 /// determines whether to call [BlocWidgetListener] of
+// ignore: comment_references
 /// [BlocListener]/[BlocConsumer] with the current `state`.
 typedef BlocListenerCondition<TState> = bool Function(
     TState previous, TState current);
 
 /// The flutter_spyglass counterpart to flutter_bloc's `BlocListener`.
 ///
+// ignore: comment_references
 /// Resolves a [TBloc] from the nearest [Deps] scope (via [BuildContext.get])
 /// - or uses the one passed explicitly through [bloc] - and invokes
 /// [listener] once for every state it emits, subject to [listenWhen]. Unlike
+// ignore: comment_references
 /// [BlocBuilder], [listener] never triggers a rebuild - use it for one-off
 /// side effects such as navigation or showing a `SnackBar`.
 class BlocListener<TBloc extends BlocBase<TState>, TState>
@@ -41,11 +44,13 @@ class BlocListener<TBloc extends BlocBase<TState>, TState>
 
   /// Invoked once per emitted state, subject to [listenWhen] - for one-off
   /// side effects, never a rebuild.
+  // ignore: unsafe_variance
   final BlocWidgetListener<TState> listener;
 
   /// Called with the previous and current state on every emission;
   /// [listener] is only invoked when this returns `true`. Defaults to
   /// invoking [listener] on every emission.
+  // ignore: unsafe_variance
   final BlocListenerCondition<TState>? listenWhen;
 
   /// The widget below this one in the tree - rendered as-is, never rebuilt
@@ -104,7 +109,9 @@ class _BlocListenerState<TBloc extends BlocBase<TState>, TState>
 
   void _subscribe() {
     _subscription = _bloc.stream.listen((state) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       if (widget.listenWhen?.call(_previousState, state) ?? true) {
         widget.listener(context, state);
       }

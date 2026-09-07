@@ -6,9 +6,11 @@ import 'package:flutter_spyglass/flutter_spyglass.dart';
 /// Registers a `Bloc`/`Cubit` as a spyglass [Dependency]. The instance is
 /// closed automatically on disposal - via [BlocBase.close] - unless [dispose]
 /// is overridden, and any widget using `context.watch<TBloc>()` (or
+// ignore: comment_references
 /// [BlocBuilder]/[BlocListener]/[BlocConsumer]) rebuilds/reacts on every
 /// emitted state.
-class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
+class BlocDependency<TBloc extends BlocBase<dynamic>>
+    extends Dependency<TBloc> {
   /// See the class-level docs above. Pass [dispose] to override the default
   /// `value.close()`.
   const BlocDependency(
@@ -18,7 +20,7 @@ class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
     FutureOr<void> Function(TBloc value)? dispose,
   }) : super(dispose: dispose ?? _dispose);
 
-  static Future<void> _dispose(BlocBase value) => value.close();
+  static Future<void> _dispose(BlocBase<dynamic> value) => value.close();
 
   @override
   DependencyObserver<TBloc> createObserver(TBloc value) {
@@ -33,7 +35,7 @@ class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
 
 /// The [DependencyObserver] behind [BlocDependency] - relays [bloc]'s own
 /// emissions to `Deps.watch` subscribers.
-class BlocDependencyObserver<TBloc extends BlocBase>
+class BlocDependencyObserver<TBloc extends BlocBase<dynamic>>
     extends DependencyObserver<TBloc> {
   /// Starts listening to [bloc]'s stream immediately.
   BlocDependencyObserver(this.bloc) {

@@ -30,16 +30,20 @@ class BlocConsumer<TBloc extends BlocBase<TState>, TState>
   final TBloc? bloc;
 
   /// Builds the widget from the bloc's current/latest state.
+  // ignore: unsafe_variance
   final BlocWidgetBuilder<TState> builder;
 
   /// Invoked as a side effect on the same state changes [builder] reacts to
   /// - see [BlocListener.listener].
+  // ignore: unsafe_variance
   final BlocWidgetListener<TState> listener;
 
   /// See [BlocBuilder.buildWhen].
+  // ignore: unsafe_variance
   final BlocBuilderCondition<TState>? buildWhen;
 
   /// See [BlocListener.listenWhen].
+  // ignore: unsafe_variance
   final BlocListenerCondition<TState>? listenWhen;
 
   @override

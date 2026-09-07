@@ -12,6 +12,7 @@ typedef BlocWidgetBuilder<TState> = Widget Function(
 
 /// Signature for the `buildWhen` function which takes the previous `state`
 /// and the current `state` and is responsible for returning a [bool] which
+// ignore: comment_references
 /// determines whether to rebuild [BlocBuilder]/[BlocConsumer] with the
 /// current `state`.
 typedef BlocBuilderCondition<TState> = bool Function(
@@ -19,10 +20,12 @@ typedef BlocBuilderCondition<TState> = bool Function(
 
 /// The flutter_spyglass counterpart to flutter_bloc's `BlocBuilder`.
 ///
+// ignore: comment_references
 /// Resolves a [TBloc] from the nearest [Deps] scope (via [BuildContext.get])
 /// - or uses the one passed explicitly through [bloc] - and rebuilds
 /// [builder] whenever the bloc emits a new state, subject to [buildWhen].
 ///
+// ignore: comment_references
 /// Unlike [BuildContext.watch], which rebuilds on every emission from the
 /// bloc registered under [TBloc], this only rebuilds when [buildWhen]
 /// (default: always) says the new state warrants it, and passes the state
@@ -42,11 +45,13 @@ class BlocBuilder<TBloc extends BlocBase<TState>, TState>
   final TBloc? bloc;
 
   /// Builds the widget from the bloc's current/latest state.
+  // ignore: unsafe_variance
   final BlocWidgetBuilder<TState> builder;
 
   /// Called with the previous and current state on every emission; the
   /// widget only rebuilds when this returns `true`. Defaults to rebuilding
   /// on every emission.
+  // ignore: unsafe_variance
   final BlocBuilderCondition<TState>? buildWhen;
 
   @override

@@ -11,16 +11,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_bloc: ^9.0.0
   flutter_spyglass:
     path: ../../packages/flutter_spyglass
-  flutter_bloc: ^9.0.0
   flutter_spyglass_bloc:
     path: ../../packages/flutter_spyglass_bloc
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  leancode_lint: ^19.0.1
 
 flutter:
   uses-material-design: true
