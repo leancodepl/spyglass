@@ -9,6 +9,8 @@ import 'package:flutter_spyglass/flutter_spyglass.dart';
 /// [BlocBuilder]/[BlocListener]/[BlocConsumer]) rebuilds/reacts on every
 /// emitted state.
 class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
+  /// See the class-level docs above. Pass [dispose] to override the default
+  /// `value.close()`.
   const BlocDependency(
     super.create, {
     super.debugLabel,
@@ -29,12 +31,16 @@ class BlocDependency<TBloc extends BlocBase> extends Dependency<TBloc> {
   }
 }
 
+/// The [DependencyObserver] behind [BlocDependency] - relays [bloc]'s own
+/// emissions to `Deps.watch` subscribers.
 class BlocDependencyObserver<TBloc extends BlocBase>
     extends DependencyObserver<TBloc> {
+  /// Starts listening to [bloc]'s stream immediately.
   BlocDependencyObserver(this.bloc) {
     _subscription = bloc.stream.listen((_) => notifyStateChanged());
   }
 
+  /// The bloc/cubit being observed.
   final TBloc bloc;
   late final StreamSubscription<void> _subscription;
 

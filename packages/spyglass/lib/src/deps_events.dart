@@ -11,6 +11,7 @@ sealed class DepsEvent {}
 /// When an async dependency is resolved it will be followed by
 /// a [DependencyChanged] event.
 final class DependencyRegistered extends Equatable implements DepsEvent {
+  /// Emitted when a dependency is registered under [key].
   const DependencyRegistered({
     required this.key,
   });
@@ -24,6 +25,7 @@ final class DependencyRegistered extends Equatable implements DepsEvent {
 
 /// Event emitted by `Deps` when a dependency is unregistered.
 final class DependencyUnregistered extends Equatable implements DepsEvent {
+  /// Emitted when the dependency registered under [key] is unregistered.
   const DependencyUnregistered({
     required this.key,
   });
@@ -38,10 +40,12 @@ final class DependencyUnregistered extends Equatable implements DepsEvent {
 /// Event emitted by `Deps` when a dependency value is changed, i.e.
 /// as a result of the `Dependency.create` callback (re-)running.
 final class DependencyChanged extends Equatable implements DepsEvent {
+  /// Emitted when the value registered under [key] changes.
   const DependencyChanged({
     required this.key,
   });
 
+  /// The key of the dependency whose value changed.
   final DependencyKey key;
 
   @override

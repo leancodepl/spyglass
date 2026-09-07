@@ -29,6 +29,7 @@ typedef BlocBuilderCondition<TState> = bool Function(
 /// itself to [builder] rather than the bloc.
 class BlocBuilder<TBloc extends BlocBase<TState>, TState>
     extends StatefulWidget {
+  /// See the class-level docs above.
   const BlocBuilder({
     super.key,
     required this.builder,
@@ -40,6 +41,7 @@ class BlocBuilder<TBloc extends BlocBase<TState>, TState>
   /// nearest [TBloc] registered in the [Deps] scope.
   final TBloc? bloc;
 
+  /// Builds the widget from the bloc's current/latest state.
   final BlocWidgetBuilder<TState> builder;
 
   /// Called with the previous and current state on every emission; the

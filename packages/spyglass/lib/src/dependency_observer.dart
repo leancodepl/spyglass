@@ -31,5 +31,7 @@ abstract class DependencyObserver<T extends Object> {
     _onChanged?.call();
   }
 
+  /// Called once, when the observed value itself is replaced or removed -
+  /// release whatever [attach] wired up (e.g. remove a listener).
   Future<void> dispose();
 }

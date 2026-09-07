@@ -32,7 +32,8 @@ void main() {
     expect(created, isTrue);
   });
 
-  test('create() runs exactly once and dispose() runs exactly once, no '
+  test(
+      'create() runs exactly once and dispose() runs exactly once, no '
       'matter which key is resolved or removed first', () async {
     var createCalls = 0;
     var disposeCalls = 0;
@@ -82,7 +83,8 @@ void main() {
     expect(second, same(scopeDeps.get<ServiceImpl>()));
   });
 
-  test('watch<TAlias>() does not react to internal state changes by '
+  test(
+      'watch<TAlias>() does not react to internal state changes by '
       'default - TAlias declares nothing about being observable', () async {
     final scopeDeps = Deps.detached()
       ..addAll([
@@ -107,7 +109,8 @@ void main() {
     await sub.cancel();
   });
 
-  test('watch<TAlias>() does react to state changes when an explicit '
+  test(
+      'watch<TAlias>() does react to state changes when an explicit '
       'createObserver is supplied', () async {
     final scopeDeps = Deps.detached()
       ..addAll([
@@ -157,7 +160,8 @@ void main() {
     expect(scopeDeps.get<ServiceInterface>(), same(resolved));
   });
 
-  test('removing the Registerable returned by addAll removes both keys '
+  test(
+      'removing the Registerable returned by addAll removes both keys '
       'together, avoiding the stale-alias caveat', () {
     final registration = [
       Dependency<ServiceImpl>((_, __) => ServiceImpl()),
@@ -172,7 +176,8 @@ void main() {
     expect(scopeDeps.isRegistered<ServiceInterface>(), isFalse);
   });
 
-  test('debugOwnDependencies lists the alias under its own key, resolving '
+  test(
+      'debugOwnDependencies lists the alias under its own key, resolving '
       'to the same value', () {
     final scopeDeps = Deps.detached()
       ..addAll([
@@ -218,8 +223,7 @@ class ServiceImpl implements ServiceInterface {
 
   void addListener(void Function() listener) => _listeners.add(listener);
 
-  void removeListener(void Function() listener) =>
-      _listeners.remove(listener);
+  void removeListener(void Function() listener) => _listeners.remove(listener);
 
   @override
   void tick() {

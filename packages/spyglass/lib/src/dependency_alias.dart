@@ -42,6 +42,8 @@ import 'dependency_observer.dart';
 @immutable
 class Alias<TAlias extends Object, TTarget extends TAlias>
     implements Registerable {
+  /// Registers [TTarget] as an alias reachable under [TAlias] too - see the
+  /// class-level docs above.
   const Alias({this.createObserver, this.tags, this.debugLabel});
 
   /// See the class-level note on state observability - `null` by default,

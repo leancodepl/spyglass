@@ -158,8 +158,7 @@ void main() {
     await deps.dispose();
   });
 
-  testWidgets(
-      'multiple selectors on the same dependency rebuild independently',
+  testWidgets('multiple selectors on the same dependency rebuild independently',
       (tester) async {
     final deps = Deps.detached()
       ..add(ChangeNotifierDependency<Pair>((_, __) => Pair(0, 100)))
@@ -283,7 +282,8 @@ void main() {
             deps: deps,
             introduceScope: false,
             register: [
-              Dependency<Marker>((_, __) => Marker(tenantId), cacheKey: tenantId),
+              Dependency<Marker>((_, __) => Marker(tenantId),
+                  cacheKey: tenantId),
             ],
             child: const SizedBox(),
           ),

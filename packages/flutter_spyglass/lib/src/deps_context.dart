@@ -3,6 +3,7 @@ import 'package:spyglass/spyglass.dart';
 
 import 'deps_provider.dart';
 
+/// Derives an [R] from a resolved [T] value - see [DepsContext.select].
 typedef Selector<T, R> = R Function(T value);
 
 /// Shortcuts for obtaining Deps values from BuildContext.
@@ -25,6 +26,8 @@ extension DepsContext on BuildContext {
   /// it never subscribes to the instance's own notifications at all.
   T watch<T extends Object>() => DepsProvider.watch<T>(this);
 
+  /// Like [watch], but returns `null` instead of throwing when [T] isn't
+  /// registered.
   T? maybeWatch<T extends Object>() => DepsProvider.maybeWatch<T>(this);
 
   /// Watch a dependency's registration only, and rebuild the widget only
@@ -33,6 +36,8 @@ extension DepsContext on BuildContext {
   /// full reactivity.
   T watchInstance<T extends Object>() => DepsProvider.watchInstance<T>(this);
 
+  /// Like [watchInstance], but returns `null` instead of throwing when [T]
+  /// isn't registered.
   T? maybeWatchInstance<T extends Object>() =>
       DepsProvider.maybeWatchInstance<T>(this);
 
@@ -43,6 +48,8 @@ extension DepsContext on BuildContext {
   R select<T extends Object, R>(Selector<T, R> selector) =>
       DepsProvider.select<T, R>(this, selector);
 
+  /// Like [select], but returns `null` instead of throwing when [T] isn't
+  /// registered.
   R? maybeSelect<T extends Object, R>(Selector<T, R> selector) =>
       DepsProvider.maybeSelect<T, R>(this, selector);
 }

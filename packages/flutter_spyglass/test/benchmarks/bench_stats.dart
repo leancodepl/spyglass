@@ -14,9 +14,10 @@ class BenchmarkStats {
   Duration get median => samples[samples.length ~/ 2];
 
   Duration get mean => Duration(
-        microseconds: (samples.map((d) => d.inMicroseconds).reduce((a, b) => a + b) /
-                samples.length)
-            .round(),
+        microseconds:
+            (samples.map((d) => d.inMicroseconds).reduce((a, b) => a + b) /
+                    samples.length)
+                .round(),
       );
 
   Duration get stdDev {
@@ -33,7 +34,8 @@ class BenchmarkStats {
       'mean=${_fmt(mean)} median=${_fmt(median)} min=${_fmt(min)} max=${_fmt(max)} '
       'stdDev=${_fmt(stdDev)} (n=${samples.length})';
 
-  static String _fmt(Duration d) => '${(d.inMicroseconds / 1000).toStringAsFixed(2)}ms';
+  static String _fmt(Duration d) =>
+      '${(d.inMicroseconds / 1000).toStringAsFixed(2)}ms';
 }
 
 /// Runs [body] [warmUpRuns] + [measuredRuns] times, discarding the warm-up

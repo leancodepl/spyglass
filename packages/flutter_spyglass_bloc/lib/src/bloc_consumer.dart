@@ -14,6 +14,7 @@ import 'bloc_listener.dart';
 /// change; otherwise prefer [BlocBuilder] or [BlocListener] alone.
 class BlocConsumer<TBloc extends BlocBase<TState>, TState>
     extends StatefulWidget {
+  /// See the class-level docs above.
   const BlocConsumer({
     super.key,
     required this.builder,
@@ -28,8 +29,11 @@ class BlocConsumer<TBloc extends BlocBase<TState>, TState>
   /// scope.
   final TBloc? bloc;
 
+  /// Builds the widget from the bloc's current/latest state.
   final BlocWidgetBuilder<TState> builder;
 
+  /// Invoked as a side effect on the same state changes [builder] reacts to
+  /// - see [BlocListener.listener].
   final BlocWidgetListener<TState> listener;
 
   /// See [BlocBuilder.buildWhen].

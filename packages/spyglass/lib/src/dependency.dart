@@ -21,7 +21,7 @@ class Dependency<T extends Object> implements Registerable {
     this.debugLabel,
     this.cacheKey,
     DependencyObserverFactory<T>? createObserver,
-  }) : createObserverFn = createObserver;
+  }) : _createObserverFn = createObserver;
 
   /// An immutable object describing a dependency. It can be registered in [Deps]
   /// by using [Deps.add].
@@ -36,7 +36,7 @@ class Dependency<T extends Object> implements Registerable {
     this.cacheKey,
     DependencyObserverFactory<T>? createObserver,
   })  : create = ((_, __) => value),
-        createObserverFn = createObserver;
+        _createObserverFn = createObserver;
 
   /// The key or type of the dependency. It is a unique identifier for the
   /// dependency in its [Deps].
@@ -88,7 +88,7 @@ class Dependency<T extends Object> implements Registerable {
 
   // reason: no other way
   // ignore: unsafe_variance
-  final DependencyObserverFactory<T>? createObserverFn;
+  final DependencyObserverFactory<T>? _createObserverFn;
 
   /// NOTE
   /// This method is required to retain generic type information when creating
@@ -108,10 +108,10 @@ class Dependency<T extends Object> implements Registerable {
   ManagedDependency<T> toManaged(Deps deps, Registerable origin) =>
       ManagedDependency(this, deps, origin);
 
-  /// Returns `null` if this dependency has no [createObserverFn], i.e. it
-  /// never reports internal state changes - see [DependencyObserver].
+  /// Returns `null` if this dependency has no `createObserver` factory, i.e.
+  /// it never reports internal state changes - see [DependencyObserver].
   DependencyObserver<T>? createObserver(T value) =>
-      createObserverFn?.call(value);
+      _createObserverFn?.call(value);
 
   @override
   String toString() {
@@ -128,6 +128,8 @@ class Dependency<T extends Object> implements Registerable {
 /// diagnostics extensions build on to show a [Deps] hierarchy.
 @immutable
 class DependencyDiagnostics {
+  /// Snapshots [dependency]'s registration/resolution state - see
+  /// [Deps.debugOwnDependencies].
   const DependencyDiagnostics({
     required this.dependency,
     required this.value,
@@ -137,6 +139,7 @@ class DependencyDiagnostics {
   /// The registered dependency's immutable descriptor.
   final Dependency<Object> dependency;
 
+  /// The key [dependency] is registered under - see [Dependency.key].
   DependencyKey get key => dependency.key;
 
   /// The dependency's current resolved value - same as `Deps.peek` would
@@ -144,6 +147,7 @@ class DependencyDiagnostics {
   /// created yet.
   final Object? value;
 
+  /// Whether [value] has been resolved yet.
   bool get isResolved => value != null;
 
   /// The [Registerable] this dependency was actually passed to
@@ -176,6 +180,8 @@ class DependencyDiagnostics {
 /// it lists. [DependencyDiagnostics.module] reports which [Module] (if any)
 /// a given registered dependency came from.
 class Module implements Registerable {
+  /// Groups [dependencies] so they can be registered and removed together -
+  /// see the class-level docs above.
   Module(
     this.dependencies, {
     this.debugLabel,
@@ -184,6 +190,7 @@ class Module implements Registerable {
   @override
   final List<Dependency<Object>> dependencies;
 
+  /// A debug label to help identify this module in logs and diagnostics.
   final String? debugLabel;
 
   @override
@@ -196,5 +203,8 @@ class Module implements Registerable {
 /// To create one, use [Dependency.new], [Dependency.value], or
 /// [Module.new].
 abstract class Registerable {
+  /// The individual [Dependency] descriptors this groups - just a
+  /// single-element list containing itself for a standalone [Dependency],
+  /// or every dependency listed in a [Module].
   Iterable<Dependency<Object>> get dependencies;
 }

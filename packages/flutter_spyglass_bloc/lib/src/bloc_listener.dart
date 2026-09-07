@@ -26,6 +26,7 @@ typedef BlocListenerCondition<TState> = bool Function(
 /// side effects such as navigation or showing a `SnackBar`.
 class BlocListener<TBloc extends BlocBase<TState>, TState>
     extends StatefulWidget {
+  /// See the class-level docs above.
   const BlocListener({
     super.key,
     required this.listener,
@@ -38,6 +39,8 @@ class BlocListener<TBloc extends BlocBase<TState>, TState>
   /// [TBloc] registered in the [Deps] scope.
   final TBloc? bloc;
 
+  /// Invoked once per emitted state, subject to [listenWhen] - for one-off
+  /// side effects, never a rebuild.
   final BlocWidgetListener<TState> listener;
 
   /// Called with the previous and current state on every emission;
@@ -45,6 +48,8 @@ class BlocListener<TBloc extends BlocBase<TState>, TState>
   /// invoking [listener] on every emission.
   final BlocListenerCondition<TState>? listenWhen;
 
+  /// The widget below this one in the tree - rendered as-is, never rebuilt
+  /// by [listener].
   final Widget child;
 
   @override

@@ -9,6 +9,7 @@ import 'deps_diagnostics.dart';
 
 /// Register on mount;  Unregister on unmount.
 class DepsProvider extends HookWidget {
+  /// Introduces a scope and/or registers [register] - see the fields below.
   const DepsProvider({
     super.key,
     this.deps,
@@ -54,6 +55,8 @@ class DepsProvider extends HookWidget {
         .get<T>();
   }
 
+  /// Like [watch], but returns `null` instead of throwing when [T] isn't
+  /// registered.
   static T? maybeWatch<T extends Object>(BuildContext context) {
     return context
         .dependOnInheritedWidgetOfExactType<_DepsInherited>(
@@ -72,6 +75,8 @@ class DepsProvider extends HookWidget {
         .get<T>();
   }
 
+  /// Like [watchInstance], but returns `null` instead of throwing when [T]
+  /// isn't registered.
   static T? maybeWatchInstance<T extends Object>(BuildContext context) {
     return context
         .dependOnInheritedWidgetOfExactType<_DepsInherited>(
@@ -93,6 +98,8 @@ class DepsProvider extends HookWidget {
     return selector(value);
   }
 
+  /// Like [select], but returns `null` instead of throwing when [T] isn't
+  /// registered.
   static R? maybeSelect<T extends Object, R>(
       BuildContext context, Selector<T, R> selector) {
     final value = context

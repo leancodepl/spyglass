@@ -11,6 +11,9 @@ import 'managed_dependency.dart';
 import 'types.dart';
 
 final _zoneKey = Object();
+
+/// The ambient [Deps] for the current [Zone] - whatever [Deps.runZoned] this
+/// code is running under, or [Deps.root] outside of one.
 Deps get globalDeps => Zone.current[_zoneKey] as Deps? ?? Deps.root;
 
 /// Alias for [globalDeps].
@@ -110,7 +113,12 @@ class Deps extends EventNotifier<DepsEvent> {
     );
   }
 
+  /// The scope this one was [fork]ed from, or `null` for [Deps.root] or a
+  /// scope created via [Deps.detached].
   final Deps? parent;
+
+  /// Whether this scope has no [parent] - i.e. it's [Deps.root] or was
+  /// created via [Deps.detached].
   bool get isRoot => parent == null;
   StreamSubscription<void>? _parentSubscription;
   bool _isDisposed = false;
@@ -184,9 +192,13 @@ class Deps extends EventNotifier<DepsEvent> {
     return map.values;
   }
 
+  /// The [Dependency] descriptors registered directly in this scope - not
+  /// its ancestors. See [getAllEntries] to include inherited ones too.
   Iterable<Dependency<Object>> get ownEntries =>
       _values.values.map((e) => e.dependency);
 
+  /// Every entry accessible from this scope (see [getAllEntries]) whose
+  /// [Dependency.tags] contains [tag].
   Iterable<Dependency<Object>> getEntriesWithTag(Object tag) =>
       getAllEntries().where((e) => e.tags?.contains(tag) ?? false);
 
@@ -543,6 +555,9 @@ class Deps extends EventNotifier<DepsEvent> {
   }
 }
 
+/// [Deps.watchInstance]-based helpers for watching several dependencies at
+/// once - [watch2] through [watch5] cover the common fixed-arity cases;
+/// [watchMany] is the general, dynamic-arity version they're built on.
 extension DepsWatchMany on Deps {
   /// Combines the latest [watchInstance] value of each of [types]. Uses
   /// [watchInstance], not [watch] - each type's own internal state
@@ -556,15 +571,23 @@ extension DepsWatchMany on Deps {
         (values) => values,
       );
 
+  /// Combines the latest [watchInstance] value of [A] and [B] - see
+  /// [watchMany].
   Stream<(A, B)> watch2<A, B>() =>
       watchMany([A, B]).map((list) => (list[0] as A, list[1] as B));
 
+  /// Combines the latest [watchInstance] value of [A], [B] and [C] - see
+  /// [watchMany].
   Stream<(A, B, C)> watch3<A, B, C>() => watchMany([A, B, C])
       .map((list) => (list[0] as A, list[1] as B, list[2] as C));
 
+  /// Combines the latest [watchInstance] value of [A] through [D] - see
+  /// [watchMany].
   Stream<(A, B, C, D)> watch4<A, B, C, D>() => watchMany([A, B, C, D])
       .map((list) => (list[0] as A, list[1] as B, list[2] as C, list[3] as D));
 
+  /// Combines the latest [watchInstance] value of [A] through [E] - see
+  /// [watchMany].
   Stream<(A, B, C, D, E)> watch5<A, B, C, D, E>() =>
       watchMany([A, B, C, D, E]).map(
         (list) => (

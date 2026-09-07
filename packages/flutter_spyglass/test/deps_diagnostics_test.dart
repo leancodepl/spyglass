@@ -19,8 +19,8 @@ void main() {
 
       final inheritedWidget = tester.widget(
         find.byElementPredicate(
-          (element) => element.widget.runtimeType.toString() ==
-              '_DepsInherited',
+          (element) =>
+              element.widget.runtimeType.toString() == '_DepsInherited',
         ),
       );
       final tree = inheritedWidget.toDiagnosticsNode().toStringDeep();
@@ -33,8 +33,8 @@ void main() {
       final updatedTree = tester
           .widget(
             find.byElementPredicate(
-              (element) => element.widget.runtimeType.toString() ==
-                  '_DepsInherited',
+              (element) =>
+                  element.widget.runtimeType.toString() == '_DepsInherited',
             ),
           )
           .toDiagnosticsNode()
@@ -45,8 +45,7 @@ void main() {
     },
   );
 
-  test('toDiagnosticsNode() prefers debugLabel over identity in its name',
-      () {
+  test('toDiagnosticsNode() prefers debugLabel over identity in its name', () {
     final deps = Deps.detached(debugLabel: 'AuthScope');
 
     expect(deps.toDiagnosticsNode().toStringDeep(), contains('AuthScope'));
@@ -102,10 +101,12 @@ void main() {
     expect(deps.toDiagnosticsNode().toStringDeep(), contains('disposed'));
   });
 
-  test('toDiagnosticsNode() flags whether a dependency was registered '
+  test(
+      'toDiagnosticsNode() flags whether a dependency was registered '
       'standalone or as part of a Module', () {
     final deps = Deps.detached()
-      ..add(Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'BarModule'))
+      ..add(
+          Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'BarModule'))
       ..add(Dependency<Foo>((_, __) => Foo()));
 
     final tree = deps.toDiagnosticsNode().toStringDeep();

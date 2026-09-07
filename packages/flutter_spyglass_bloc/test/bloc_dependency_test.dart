@@ -7,7 +7,8 @@ class Counter extends Cubit<int> {
 }
 
 void main() {
-  test('the bloc/cubit is closed automatically when removed, via '
+  test(
+      'the bloc/cubit is closed automatically when removed, via '
       'BlocBase.close()', () async {
     final deps = Deps.detached()
       ..add(BlocDependency<Counter>((_, __) => Counter(0)));

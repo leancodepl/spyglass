@@ -47,7 +47,8 @@ void main() {
     expect(scopeDeps.get<Qux>().label, equals('second'));
   });
 
-  test('create never re-runs when it only reads through get(), not '
+  test(
+      'create never re-runs when it only reads through get(), not '
       'watchInstance()', () async {
     var createCalls = 0;
     final scopeDeps = Deps.detached()
@@ -71,7 +72,8 @@ void main() {
     expect(scopeDeps.get<Qux>().label, equals('first'));
   });
 
-  test('create only reacts to the keys it actually reads this run - '
+  test(
+      'create only reacts to the keys it actually reads this run - '
       'unread keys are ignored even though they change', () async {
     final scopeDeps = Deps.detached()
       ..add(Dependency((_, __) => Corge('corge-1')))
@@ -97,7 +99,8 @@ void main() {
     expect(scopeDeps.get<Waldo>().label, equals('corge-2'));
   });
 
-  test('create adjusts its subscription when the keys it reads change '
+  test(
+      'create adjusts its subscription when the keys it reads change '
       'between runs', () async {
     // An external toggle, flipped mid-test, standing in for create's logic
     // taking a different branch (e.g. based on oldValue) on a later run.
@@ -225,7 +228,8 @@ void main() {
     await scopeDeps.dispose();
   });
 
-  test('watch() switches to a newly re-registered '
+  test(
+      'watch() switches to a newly re-registered '
       'instance and stops reacting to the old one', () async {
     Dependency<Counter> makeCounter(int value) => Dependency<Counter>(
           (_, __) => Counter(value),
@@ -235,8 +239,7 @@ void main() {
     final scopeDeps = Deps.detached()..add(makeCounter(1));
 
     final values = <int>[];
-    final sub =
-        scopeDeps.watch<Counter>().listen((c) => values.add(c.value));
+    final sub = scopeDeps.watch<Counter>().listen((c) => values.add(c.value));
     await Future<void>.delayed(Duration.zero);
 
     final firstCounter = scopeDeps.get<Counter>()..set(2);
@@ -297,8 +300,7 @@ void main() {
     );
   });
 
-  test('add() throws after Deps.dispose(), but remove() is a no-op',
-      () async {
+  test('add() throws after Deps.dispose(), but remove() is a no-op', () async {
     final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
     await scopeDeps.dispose();
 
@@ -309,7 +311,8 @@ void main() {
     expect(() => scopeDeps.remove<Bar>(), returnsNormally);
   });
 
-  test('get() throws DependencyNotRegisteredException for an unknown key, '
+  test(
+      'get() throws DependencyNotRegisteredException for an unknown key, '
       'but tryGet() returns null', () {
     final scopeDeps = Deps.detached();
 
@@ -336,7 +339,8 @@ void main() {
     expect(scopeDeps.peek<Bar>(), same(value));
   });
 
-  test('debugLabel shows up in toString(), falling back to root/identity '
+  test(
+      'debugLabel shows up in toString(), falling back to root/identity '
       'when unset', () {
     final labeled = Deps.detached(debugLabel: 'AuthScope');
     expect(labeled.toString(), equals("Deps('AuthScope')"));
@@ -356,7 +360,8 @@ void main() {
     expect(scopeDeps.isDisposed, isTrue);
   });
 
-  test('debugOwnDependencies reports registration and resolution state, '
+  test(
+      'debugOwnDependencies reports registration and resolution state, '
       'regardless of spyglassDiagnosticsMode', () {
     final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
@@ -372,7 +377,8 @@ void main() {
     expect(afterResolve.value, same(value));
   });
 
-  test('debugChildren tracks live fork()ed scopes, only when '
+  test(
+      'debugChildren tracks live fork()ed scopes, only when '
       'spyglassDiagnosticsMode is enabled', () {
     final root = Deps.detached();
     expect(root.debugChildren, isEmpty);
@@ -405,7 +411,8 @@ void main() {
     );
   });
 
-  test('add() leaves the existing value in place when cacheKey matches '
+  test(
+      'add() leaves the existing value in place when cacheKey matches '
       '(including both being null), and replaces when it differs', () {
     final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
     final first = scopeDeps.get<Bar>();
@@ -439,8 +446,7 @@ void main() {
     expect(scopeDeps.get<Bar>(), isNot(same(first)));
   });
 
-  test('remove() accepts a Module and removes every dependency it groups',
-      () {
+  test('remove() accepts a Module and removes every dependency it groups', () {
     final module = Module([
       Dependency<Bar>((_, __) => Bar()),
       Dependency<Foo>((deps, _) => Foo(bar: deps.get())),
@@ -456,7 +462,8 @@ void main() {
     expect(scopeDeps.isRegistered<Foo>(), isFalse);
   });
 
-  test('remove() accepts a Registerable describing the same dependency '
+  test(
+      'remove() accepts a Registerable describing the same dependency '
       'types, without needing the exact original instance', () {
     Module makeModule() => Module([
           Dependency<Bar>((_, __) => Bar()),
@@ -482,7 +489,8 @@ void main() {
     expect(scopeDeps.isRegistered<Bar>(), isFalse);
   });
 
-  test('remove() throws ArgumentError for a value that is neither a Type '
+  test(
+      'remove() throws ArgumentError for a value that is neither a Type '
       'nor a Registerable', () {
     final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
@@ -493,8 +501,7 @@ void main() {
   });
 
   test('debugOwnDependencies reports isStandalone and module correctly', () {
-    final module =
-        Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'M');
+    final module = Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'M');
     final scopeDeps = Deps.detached()
       ..add(module)
       ..add(Dependency<Foo>((deps, _) => Foo(bar: deps.get())));
@@ -533,8 +540,7 @@ class Counter {
 
   void addListener(void Function() listener) => _listeners.add(listener);
 
-  void removeListener(void Function() listener) =>
-      _listeners.remove(listener);
+  void removeListener(void Function() listener) => _listeners.remove(listener);
 
   void set(int newValue) {
     value = newValue;

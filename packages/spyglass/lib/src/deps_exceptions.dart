@@ -3,6 +3,7 @@ import 'types.dart';
 /// Thrown by `Deps.get` and `Deps.tryGet` when no dependency is registered
 /// under [key] in this `Deps` scope or any of its ancestors.
 class DependencyNotRegisteredException implements Exception {
+  /// Thrown for [key] - see the class-level docs above.
   const DependencyNotRegisteredException(this.key);
 
   /// The key that was looked up.
@@ -22,6 +23,7 @@ class DependencyNotRegisteredException implements Exception {
 /// finished resolving yet - e.g. `Dependency.create` is asynchronous and
 /// still running.
 class DependencyNotResolvedException implements Exception {
+  /// Thrown for [key] - see the class-level docs above.
   const DependencyNotResolvedException(this.key);
 
   /// The key that was looked up.
@@ -42,6 +44,8 @@ class DependencyNotResolvedException implements Exception {
 /// a value from a scope whose dependencies have all been torn down doesn't
 /// either).
 class DepsDisposedException implements Exception {
+  /// Thrown for the failing operation, optionally naming the [key] it was
+  /// about - see the class-level docs above.
   const DepsDisposedException({this.key});
 
   /// The dependency key involved, if the failing operation was about a
@@ -65,6 +69,7 @@ class DepsDisposedException implements Exception {
 /// the first call has finished - i.e. a dependency, directly or indirectly,
 /// depends on itself.
 class DependencyCycleException implements Exception {
+  /// Thrown for [key] - see the class-level docs above.
   const DependencyCycleException(this.key);
 
   /// The key whose creation cycled back on itself.
