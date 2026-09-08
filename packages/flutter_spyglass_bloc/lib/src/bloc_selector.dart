@@ -9,8 +9,8 @@ import 'bloc_builder.dart';
 /// Signature for the `selector` function which takes the `state` and is
 /// responsible for returning the selected value that a [BlocSelector]
 /// rebuilds on changes of.
-typedef BlocWidgetSelector<TState, TSelected> =
-    TSelected Function(TState state);
+typedef BlocWidgetSelector<TState, TSelected> = TSelected Function(
+    TState state);
 
 /// The flutter_spyglass counterpart to flutter_bloc's `BlocSelector`.
 ///
