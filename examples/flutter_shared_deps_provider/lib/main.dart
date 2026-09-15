@@ -76,8 +76,8 @@ class WizardScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DepsProvider(
-      sharedKey: flowId,
+    return DepsProvider.shared(
+      flowId,
       register: [wizardModule],
       child: child,
     );

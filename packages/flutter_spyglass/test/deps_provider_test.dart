@@ -16,9 +16,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Column(
             children: [
               Builder(builder: (context) {
@@ -63,9 +62,8 @@ void main() {
         });
 
     Widget buildTree(bool includeThird) => MaterialApp(
-          home: DepsProvider(
-            deps: deps,
-            introduceScope: false,
+          home: DepsProvider.deps(
+            deps,
             child: Column(
               children: [
                 watcher(0),
@@ -107,9 +105,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Column(
             children: [
               Builder(builder: (context) {
@@ -169,9 +166,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Column(
             children: [
               Builder(builder: (context) {
@@ -222,9 +218,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Builder(
             builder: (context) => Text('${context.watch<Counter>().value}'),
           ),
@@ -247,9 +242,8 @@ void main() {
     final deps = Deps.detached();
 
     Widget buildTree(int instanceId) => MaterialApp(
-          home: DepsProvider(
-            deps: deps,
-            introduceScope: false,
+          home: DepsProvider.deps(
+            deps,
             register: [
               Dependency<Marker>((_, __) => Marker(instanceId)),
             ],
@@ -278,9 +272,8 @@ void main() {
     final deps = Deps.detached();
 
     Widget buildTree(int tenantId) => MaterialApp(
-          home: DepsProvider(
-            deps: deps,
-            introduceScope: false,
+          home: DepsProvider.deps(
+            deps,
             register: [
               Dependency<Marker>((_, __) => Marker(tenantId),
                   cacheKey: tenantId),
@@ -316,9 +309,8 @@ void main() {
 
     Widget buildTree({required bool includeA, required bool includeB}) =>
         MaterialApp(
-          home: DepsProvider(
-            deps: deps,
-            introduceScope: false,
+          home: DepsProvider.deps(
+            deps,
             register: [
               if (includeA)
                 Dependency<MarkerA>(
@@ -368,18 +360,18 @@ void main() {
             child: Column(
               children: [
                 if (includeA)
-                  DepsProvider(
+                  DepsProvider.shared(
+                    'flow',
                     key: const ValueKey('a'),
-                    sharedKey: 'flow',
                     child: Builder(builder: (context) {
                       scopeA = DepsProvider.of(context);
                       return const SizedBox();
                     }),
                   ),
                 if (includeB)
-                  DepsProvider(
+                  DepsProvider.shared(
+                    'flow',
                     key: const ValueKey('b'),
-                    sharedKey: 'flow',
                     child: Builder(builder: (context) {
                       scopeB = DepsProvider.of(context);
                       return const SizedBox();
@@ -424,9 +416,9 @@ void main() {
             child: Column(
               children: [
                 if (includeA)
-                  DepsProvider(
+                  DepsProvider.shared(
+                    'flow',
                     key: const ValueKey('a'),
-                    sharedKey: 'flow',
                     register: [markerDependency()],
                     child: Builder(builder: (context) {
                       scope = DepsProvider.of(context);
@@ -434,9 +426,9 @@ void main() {
                     }),
                   ),
                 if (includeB)
-                  DepsProvider(
+                  DepsProvider.shared(
+                    'flow',
                     key: const ValueKey('b'),
-                    sharedKey: 'flow',
                     register: [markerDependency()],
                     child: const SizedBox(),
                   ),
@@ -474,9 +466,9 @@ void main() {
 
     Widget buildTree(Key key) => MaterialApp(
           home: DepsProvider(
-            child: DepsProvider(
+            child: DepsProvider.shared(
+              'flow',
               key: key,
-              sharedKey: 'flow',
               register: [markerDependency()],
               child: Builder(builder: (context) {
                 scope = DepsProvider.of(context);
@@ -513,18 +505,18 @@ void main() {
           home: Column(
             children: [
               if (includeA)
-                DepsProvider(
+                DepsProvider.shared(
+                  'no-ancestor-flow',
                   key: const ValueKey('a'),
-                  sharedKey: 'no-ancestor-flow',
                   child: Builder(builder: (context) {
                     scopeA = DepsProvider.of(context);
                     return const SizedBox();
                   }),
                 ),
               if (includeB)
-                DepsProvider(
+                DepsProvider.shared(
+                  'no-ancestor-flow',
                   key: const ValueKey('b'),
-                  sharedKey: 'no-ancestor-flow',
                   child: Builder(builder: (context) {
                     scopeB = DepsProvider.of(context);
                     return const SizedBox();

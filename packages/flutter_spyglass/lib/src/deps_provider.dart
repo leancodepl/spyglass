@@ -68,27 +68,38 @@ final _fallbackRegistries =
 
 /// Register on mount;  Unregister on unmount.
 class DepsProvider extends StatefulWidget {
-  /// Introduces a scope and/or registers [register] - see the fields below.
+  /// Forks a fresh scope from the nearest ancestor one - or, with
+  /// [introduceScope] set to `false`, registers [register] directly into
+  /// that ancestor scope instead of introducing a new one. Use
+  /// [DepsProvider.deps] to provide an existing [Deps] instance instead, or
+  /// [DepsProvider.shared] to share one ref-counted scope between several
+  /// [DepsProvider]s.
   const DepsProvider({
     super.key,
-    this.deps,
-    this.sharedKey,
     this.register,
     this.introduceScope = true,
     this.child,
     this.builder,
-  })  : assert(child != null || builder != null),
-        assert(deps == null || sharedKey == null,
-            'Pass either deps or sharedKey, not both.'),
-        assert(sharedKey == null || introduceScope,
-            'sharedKey has no effect when introduceScope is false.');
+  })  : deps = null,
+        sharedKey = null,
+        assert(child != null || builder != null);
 
   /// Provide a custom [Deps] instance that dependencies listed in [register]
   /// should be added to. This will also influence the provided scope to the
-  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch].
-  final Deps? deps;
+  /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch]. The
+  /// caller remains responsible for eventually disposing [deps] - unlike the
+  /// default constructor's forked scope, this widget never disposes it.
+  const DepsProvider.deps(
+    this.deps, {
+    super.key,
+    this.register,
+    this.child,
+    this.builder,
+  })  : sharedKey = null,
+        introduceScope = true,
+        assert(child != null || builder != null);
 
-  /// When set, every [DepsProvider] sharing this same key under the same
+  /// Every [DepsProvider] sharing this same [sharedKey] under the same
   /// nearest ancestor scope resolves to one underlying forked [Deps] -
   /// created when the first of them mounts, disposed once the last of them
   /// unmounts. Useful for a multi-screen flow that should share one scope
@@ -99,6 +110,22 @@ class DepsProvider extends StatefulWidget {
   /// removed - and disposed - once none of them still register it. This
   /// assumes a given key means the same thing (the same [Dependency.
   /// cacheKey], where used) across all of them.
+  const DepsProvider.shared(
+    this.sharedKey, {
+    super.key,
+    this.register,
+    this.child,
+    this.builder,
+  })  : deps = null,
+        introduceScope = true,
+        assert(child != null || builder != null);
+
+  /// See [DepsProvider.deps]. `null` unless this [DepsProvider] was created
+  /// via that constructor.
+  final Deps? deps;
+
+  /// See [DepsProvider.shared]. `null` unless this [DepsProvider] was
+  /// created via that constructor.
   final Object? sharedKey;
 
   /// A list of dependencies to register on mount and unregister on unmount.
@@ -106,7 +133,9 @@ class DepsProvider extends StatefulWidget {
   final Iterable<Registerable>? register;
 
   /// By default [DepsProvider] introduces a new scope. Set this to `false` to
-  /// just register new dependencies in [register].
+  /// just register new dependencies in [register]. Only meaningful on the
+  /// default constructor - always `true` for [DepsProvider.deps] and
+  /// [DepsProvider.shared], for which it wouldn't mean anything else.
   final bool introduceScope;
 
   /// The widget below this widget in the tree. Use [builder] alternatively.

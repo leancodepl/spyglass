@@ -35,9 +35,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: scopeDeps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          scopeDeps,
           child: SingleChildScrollView(
             child: Column(
               children: [
