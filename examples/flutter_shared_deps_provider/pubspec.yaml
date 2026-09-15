@@ -1,0 +1,24 @@
+name: flutter_shared_deps_provider
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_spyglass:
+    path: ../../packages/flutter_spyglass
+  marionette_flutter: ^0.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  leancode_lint: ^19.0.1
+
+flutter:
+  uses-material-design: true

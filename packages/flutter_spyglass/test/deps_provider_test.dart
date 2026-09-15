@@ -355,6 +355,194 @@ void main() {
 
     await deps.dispose();
   });
+
+  testWidgets(
+      'DepsProviders sharing a sharedKey resolve to the same scope, created '
+      'once and disposed once the last one unmounts', (tester) async {
+    Deps? scopeA;
+    Deps? scopeB;
+
+    Widget buildTree({required bool includeA, required bool includeB}) =>
+        MaterialApp(
+          home: DepsProvider(
+            child: Column(
+              children: [
+                if (includeA)
+                  DepsProvider(
+                    key: const ValueKey('a'),
+                    sharedKey: 'flow',
+                    child: Builder(builder: (context) {
+                      scopeA = DepsProvider.of(context);
+                      return const SizedBox();
+                    }),
+                  ),
+                if (includeB)
+                  DepsProvider(
+                    key: const ValueKey('b'),
+                    sharedKey: 'flow',
+                    child: Builder(builder: (context) {
+                      scopeB = DepsProvider.of(context);
+                      return const SizedBox();
+                    }),
+                  ),
+              ],
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(buildTree(includeA: true, includeB: true));
+    expect(scopeA, isNotNull);
+    expect(scopeA, same(scopeB));
+    final scope = scopeA!;
+    expect(scope.isDisposed, isFalse);
+
+    // Unmount A - B still references the shared scope, so it must survive.
+    await tester.pumpWidget(buildTree(includeA: false, includeB: true));
+    await tester.pump();
+    expect(scope.isDisposed, isFalse);
+
+    // Unmount B too - nothing references it any more.
+    await tester.pumpWidget(buildTree(includeA: false, includeB: false));
+    await tester.pump();
+    expect(scope.isDisposed, isTrue);
+  });
+
+  testWidgets(
+      'a dependency registered by more than one sharedKey provider is not '
+      'disposed until none of them still register it', (tester) async {
+    final disposed = <String>[];
+    Deps? scope;
+
+    Registerable markerDependency() => Dependency<Marker>(
+          (_, __) => Marker(1),
+          dispose: (_) => disposed.add('marker'),
+        );
+
+    Widget buildTree({required bool includeA, required bool includeB}) =>
+        MaterialApp(
+          home: DepsProvider(
+            child: Column(
+              children: [
+                if (includeA)
+                  DepsProvider(
+                    key: const ValueKey('a'),
+                    sharedKey: 'flow',
+                    register: [markerDependency()],
+                    child: Builder(builder: (context) {
+                      scope = DepsProvider.of(context);
+                      return const SizedBox();
+                    }),
+                  ),
+                if (includeB)
+                  DepsProvider(
+                    key: const ValueKey('b'),
+                    sharedKey: 'flow',
+                    register: [markerDependency()],
+                    child: const SizedBox(),
+                  ),
+              ],
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(buildTree(includeA: true, includeB: true));
+    final marker = scope!.get<Marker>();
+
+    // Unmount A - B still lists the same key in its own register, so the
+    // dependency it describes must survive.
+    await tester.pumpWidget(buildTree(includeA: false, includeB: true));
+    await tester.pump();
+    expect(disposed, isEmpty);
+    expect(scope!.get<Marker>(), same(marker));
+
+    // Unmount B too - nothing registers it any more.
+    await tester.pumpWidget(buildTree(includeA: false, includeB: false));
+    await tester.pump();
+    expect(disposed, equals(['marker']));
+  });
+
+  testWidgets(
+      'a same-frame handoff between two sharedKey providers reuses the '
+      'scope and its dependencies instead of recreating them', (tester) async {
+    final disposed = <String>[];
+    Deps? scope;
+
+    Registerable markerDependency() => Dependency<Marker>(
+          (_, __) => Marker(1),
+          dispose: (_) => disposed.add('marker'),
+        );
+
+    Widget buildTree(Key key) => MaterialApp(
+          home: DepsProvider(
+            child: DepsProvider(
+              key: key,
+              sharedKey: 'flow',
+              register: [markerDependency()],
+              child: Builder(builder: (context) {
+                scope = DepsProvider.of(context);
+                return const SizedBox();
+              }),
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(buildTree(const ValueKey('a')));
+    final originalScope = scope!;
+    final marker = originalScope.get<Marker>();
+
+    // A different key at the same slot forces a real unmount of 'a' and
+    // mount of 'b' within this single pumpWidget call, rather than an
+    // in-place update of one persisting element.
+    await tester.pumpWidget(buildTree(const ValueKey('b')));
+    await tester.pump();
+
+    expect(scope, same(originalScope));
+    expect(originalScope.isDisposed, isFalse);
+    expect(originalScope.get<Marker>(), same(marker));
+    expect(disposed, isEmpty);
+  });
+
+  testWidgets(
+      'sharedKey providers with no ancestor DepsProvider still share a scope',
+      (tester) async {
+    Deps? scopeA;
+    Deps? scopeB;
+
+    Widget buildTree({required bool includeA, required bool includeB}) =>
+        MaterialApp(
+          home: Column(
+            children: [
+              if (includeA)
+                DepsProvider(
+                  key: const ValueKey('a'),
+                  sharedKey: 'no-ancestor-flow',
+                  child: Builder(builder: (context) {
+                    scopeA = DepsProvider.of(context);
+                    return const SizedBox();
+                  }),
+                ),
+              if (includeB)
+                DepsProvider(
+                  key: const ValueKey('b'),
+                  sharedKey: 'no-ancestor-flow',
+                  child: Builder(builder: (context) {
+                    scopeB = DepsProvider.of(context);
+                    return const SizedBox();
+                  }),
+                ),
+            ],
+          ),
+        );
+
+    await tester.pumpWidget(buildTree(includeA: true, includeB: true));
+    expect(scopeA, isNotNull);
+    expect(scopeA, same(scopeB));
+    final scope = scopeA!;
+
+    await tester.pumpWidget(buildTree(includeA: false, includeB: false));
+    await tester.pump();
+    expect(scope.isDisposed, isTrue);
+  });
 }
 
 class CounterA extends ChangeNotifier {
