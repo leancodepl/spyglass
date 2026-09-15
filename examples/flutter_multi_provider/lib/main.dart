@@ -1,8 +1,17 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_multi_provider/data_cubit.dart';
 import 'package:flutter_spyglass_bloc/flutter_spyglass_bloc.dart';
+import 'package:marionette_flutter/marionette_flutter.dart';
 
 void main() {
+  // Lets an MCP client (e.g. marionette_mcp) inspect and drive this app at
+  // runtime - inert in release builds.
+  if (kDebugMode) {
+    MarionetteBinding.ensureInitialized();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   runApp(const MainApp());
 }
 

@@ -19,9 +19,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Builder(
             builder: (context) => BlocSelector<Counter, int, bool>(
               selector: (state) => state.isEven,
@@ -65,9 +64,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Builder(
             builder: (context) => BlocSelector<Counter, int, int>(
               bloc: explicitCounter,
@@ -99,9 +97,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: Builder(
             builder: (context) => BlocSelector<Counter, int, int>(
               selector: (state) => state,

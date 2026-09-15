@@ -1,8 +1,17 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spyglass/flutter_spyglass.dart';
+import 'package:marionette_flutter/marionette_flutter.dart';
 
 void main() {
+  // Lets an MCP client (e.g. marionette_mcp) inspect and drive this app at
+  // runtime - inert in release builds.
+  if (kDebugMode) {
+    MarionetteBinding.ensureInitialized();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   runApp(const MainApp());
 }
 

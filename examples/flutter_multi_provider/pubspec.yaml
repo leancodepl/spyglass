@@ -16,6 +16,7 @@ dependencies:
     path: ../../packages/flutter_spyglass
   flutter_spyglass_bloc:
     path: ../../packages/flutter_spyglass_bloc
+  marionette_flutter: ^0.6.0
 
 dev_dependencies:
   flutter_test:

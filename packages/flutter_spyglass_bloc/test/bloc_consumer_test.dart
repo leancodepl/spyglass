@@ -18,9 +18,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: BlocConsumer<Counter, int>(
             listener: (context, state) => seen.add(state),
             builder: (context, state) => Text('$state'),
@@ -52,9 +51,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: BlocConsumer<Counter, int>(
             buildWhen: (previous, current) => current.isEven,
             listenWhen: (previous, current) => current.isOdd,
@@ -99,9 +97,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          deps,
           child: BlocConsumer<Counter, int>(
             bloc: explicitCounter,
             listener: (context, state) => seen.add(state),

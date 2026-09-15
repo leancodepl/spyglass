@@ -10,9 +10,8 @@ void main() {
       final deps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
 
       await tester.pumpWidget(
-        DepsProvider(
-          deps: deps,
-          introduceScope: false,
+        DepsProvider.deps(
+          deps,
           child: const SizedBox(),
         ),
       );

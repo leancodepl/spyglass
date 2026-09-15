@@ -44,9 +44,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: DepsProvider(
-              deps: scopeDeps,
-              introduceScope: false,
+            home: DepsProvider.deps(
+              scopeDeps,
               child: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -102,9 +101,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: DepsProvider(
-          deps: scopeDeps,
-          introduceScope: false,
+        home: DepsProvider.deps(
+          scopeDeps,
           child: SingleChildScrollView(
             child: Column(
               children: [
@@ -178,9 +176,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: DepsProvider(
-              deps: d,
-              introduceScope: false,
+            home: DepsProvider.deps(
+              d,
               child: SingleChildScrollView(
                 child: Column(
                   children: [
