@@ -37,7 +37,7 @@ void main() {
         currentDeps = null;
       },
       body: () async {
-        final scopeDeps = Deps.root.fork()
+        final scopeDeps = Deps.global.fork()
           ..addAll([
             for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
           ])
@@ -87,7 +87,7 @@ void main() {
       warmUpRuns: warmUp,
       measuredRuns: runs,
       setUp: () async {
-        final scopeDeps = Deps.root.fork()
+        final scopeDeps = Deps.global.fork()
           ..addAll([
             for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
           ])
@@ -163,7 +163,7 @@ void main() {
     // remount, here via a changing key around the whole subtree.
     var generation = 0;
 
-    final scopeDeps = Deps.root.fork()
+    final scopeDeps = Deps.global.fork()
       ..addAll([
         for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
       ])

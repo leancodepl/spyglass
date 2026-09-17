@@ -8,10 +8,16 @@ class Counter extends Cubit<int> {
 }
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   testWidgets(
       'rebuilds with the current state and on every emission by '
       'default', (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -42,13 +48,11 @@ void main() {
 
     expect(builds, equals(2));
     expect(find.text('1'), findsOneWidget);
-
-    await deps.dispose();
   });
 
   testWidgets('buildWhen controls whether an emission triggers a rebuild',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -87,13 +91,11 @@ void main() {
 
     expect(builds, equals(2));
     expect(find.text('2'), findsOneWidget);
-
-    await deps.dispose();
   });
 
   testWidgets('an explicit bloc is used instead of the one from Deps',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
     final explicitCounter = Counter(100);
@@ -120,13 +122,12 @@ void main() {
 
     expect(find.text('101'), findsOneWidget);
 
-    await deps.dispose();
     await explicitCounter.close();
   });
 
   testWidgets('rebuilds against a newly-registered bloc instance',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -155,7 +156,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('43'), findsOneWidget);
-
-    await deps.dispose();
   });
 }

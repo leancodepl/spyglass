@@ -8,10 +8,16 @@ class Counter extends Cubit<int> {
 }
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   testWidgets(
       'invokes listener for every emission by default, without '
       'rebuilding the child', (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -42,13 +48,11 @@ void main() {
 
     expect(seen, equals([1]));
     expect(childBuilds, equals(1));
-
-    await deps.dispose();
   });
 
   testWidgets('listenWhen controls whether an emission triggers listener',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -75,13 +79,11 @@ void main() {
     deps.get<Counter>().emit(2);
     await tester.pumpAndSettle();
     expect(seen, equals([2]));
-
-    await deps.dispose();
   });
 
   testWidgets('an explicit bloc is used instead of the one from Deps',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
     final explicitCounter = Counter(100);
@@ -106,7 +108,6 @@ void main() {
 
     expect(seen, equals([101]));
 
-    await deps.dispose();
     await explicitCounter.close();
   });
 }

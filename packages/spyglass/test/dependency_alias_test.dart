@@ -2,33 +2,37 @@ import 'package:spyglass/spyglass.dart';
 import 'package:test/test.dart';
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   test('get<TAlias>() and get<TTarget>() return the identical instance', () {
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>((_, __) => ServiceImpl()),
-        const Alias<ServiceInterface, ServiceImpl>(),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>((_, __) => ServiceImpl()),
+      const Alias<ServiceInterface, ServiceImpl>(),
+    ]);
 
     expect(
-      scopeDeps.get<ServiceInterface>(),
-      same(scopeDeps.get<ServiceImpl>()),
+      deps.get<ServiceInterface>(),
+      same(deps.get<ServiceImpl>()),
     );
   });
 
   test('the alias is lazy - it does not force early creation', () {
     var created = false;
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>((_, __) {
-          created = true;
-          return ServiceImpl();
-        }),
-        const Alias<ServiceInterface, ServiceImpl>(),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>((_, __) {
+        created = true;
+        return ServiceImpl();
+      }),
+      const Alias<ServiceInterface, ServiceImpl>(),
+    ]);
 
     expect(created, isFalse);
 
-    scopeDeps.get<ServiceInterface>();
+    deps.get<ServiceInterface>();
     expect(created, isTrue);
   });
 
@@ -37,7 +41,7 @@ void main() {
       'matter which key is resolved or removed first', () async {
     var createCalls = 0;
     var disposeCalls = 0;
-    final scopeDeps = Deps.detached()
+    deps
       ..addAll([
         Dependency<ServiceImpl>(
           (_, __) {
@@ -55,51 +59,49 @@ void main() {
 
     // Removing just the alias key must not dispose the shared instance -
     // ServiceImpl is still registered and live.
-    scopeDeps.remove<ServiceInterface>();
+    deps.remove<ServiceInterface>();
     await Future<void>.delayed(Duration.zero);
     expect(disposeCalls, equals(0));
 
-    scopeDeps.remove<ServiceImpl>();
+    deps.remove<ServiceImpl>();
     await Future<void>.delayed(Duration.zero);
     expect(disposeCalls, equals(1));
   });
 
   test('the alias follows replace() to the newly-registered instance',
       () async {
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>((_, __) => ServiceImpl()),
-        const Alias<ServiceInterface, ServiceImpl>(),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>((_, __) => ServiceImpl()),
+      const Alias<ServiceInterface, ServiceImpl>(),
+    ]);
 
-    final first = scopeDeps.get<ServiceInterface>();
-    expect(first, same(scopeDeps.get<ServiceImpl>()));
+    final first = deps.get<ServiceInterface>();
+    expect(first, same(deps.get<ServiceImpl>()));
 
-    scopeDeps.replace(Dependency<ServiceImpl>((_, __) => ServiceImpl()));
+    deps.replace(Dependency<ServiceImpl>((_, __) => ServiceImpl()));
     await Future<void>.delayed(Duration.zero);
 
-    final second = scopeDeps.get<ServiceInterface>();
+    final second = deps.get<ServiceInterface>();
     expect(second, isNot(same(first)));
-    expect(second, same(scopeDeps.get<ServiceImpl>()));
+    expect(second, same(deps.get<ServiceImpl>()));
   });
 
   test(
       'watch<TAlias>() does not react to internal state changes by '
       'default - TAlias declares nothing about being observable', () async {
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>(
-          (_, __) => ServiceImpl(),
-          createObserver: _CounterObserver.new,
-        ),
-        const Alias<ServiceInterface, ServiceImpl>(),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>(
+        (_, __) => ServiceImpl(),
+        createObserver: _CounterObserver.new,
+      ),
+      const Alias<ServiceInterface, ServiceImpl>(),
+    ]);
 
     final events = <ServiceInterface>[];
-    final sub = scopeDeps.watch<ServiceInterface>().listen(events.add);
+    final sub = deps.watch<ServiceInterface>().listen(events.add);
     await Future<void>.delayed(Duration.zero);
 
-    scopeDeps.get<ServiceImpl>().tick();
+    deps.get<ServiceImpl>().tick();
     await Future<void>.delayed(Duration.zero);
 
     // Only the initial value - the tick on ServiceImpl never reached the
@@ -112,19 +114,18 @@ void main() {
   test(
       'watch<TAlias>() does react to state changes when an explicit '
       'createObserver is supplied', () async {
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>((_, __) => ServiceImpl()),
-        Alias<ServiceInterface, ServiceImpl>(
-          createObserver: (v) => _CounterObserver(v as ServiceImpl),
-        ),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>((_, __) => ServiceImpl()),
+      Alias<ServiceInterface, ServiceImpl>(
+        createObserver: (v) => _CounterObserver(v as ServiceImpl),
+      ),
+    ]);
 
     final events = <ServiceInterface>[];
-    final sub = scopeDeps.watch<ServiceInterface>().listen(events.add);
+    final sub = deps.watch<ServiceInterface>().listen(events.add);
     await Future<void>.delayed(Duration.zero);
 
-    scopeDeps.get<ServiceImpl>().tick();
+    deps.get<ServiceImpl>().tick();
     await Future<void>.delayed(Duration.zero);
 
     expect(events, hasLength(2));
@@ -137,27 +138,26 @@ void main() {
       'behind, pointing at a disposed instance - remove both together '
       'instead', () async {
     var disposeCalls = 0;
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>(
-          (_, __) => ServiceImpl(),
-          dispose: (_) => disposeCalls++,
-        ),
-        const Alias<ServiceInterface, ServiceImpl>(),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>(
+        (_, __) => ServiceImpl(),
+        dispose: (_) => disposeCalls++,
+      ),
+      const Alias<ServiceInterface, ServiceImpl>(),
+    ]);
 
-    final resolved = scopeDeps.get<ServiceInterface>();
+    final resolved = deps.get<ServiceInterface>();
 
     // Bare remove<ServiceImpl>() - not the grouping Module/registerable -
     // disposes the shared instance, but ServiceInterface stays registered
     // and still resolves to it: DependencyUnregistered doesn't retrigger
     // an alias's update().
-    scopeDeps.remove<ServiceImpl>();
+    deps.remove<ServiceImpl>();
     await Future<void>.delayed(Duration.zero);
 
     expect(disposeCalls, equals(1));
-    expect(scopeDeps.isRegistered<ServiceInterface>(), isTrue);
-    expect(scopeDeps.get<ServiceInterface>(), same(resolved));
+    expect(deps.isRegistered<ServiceInterface>(), isTrue);
+    expect(deps.get<ServiceInterface>(), same(resolved));
   });
 
   test(
@@ -167,28 +167,27 @@ void main() {
       Dependency<ServiceImpl>((_, __) => ServiceImpl()),
       const Alias<ServiceInterface, ServiceImpl>(),
     ];
-    final scopeDeps = Deps.detached()
+    deps
       ..addAll(registration)
       ..get<ServiceInterface>();
-    registration.forEach(scopeDeps.remove);
+    registration.forEach(deps.remove);
 
-    expect(scopeDeps.isRegistered<ServiceImpl>(), isFalse);
-    expect(scopeDeps.isRegistered<ServiceInterface>(), isFalse);
+    expect(deps.isRegistered<ServiceImpl>(), isFalse);
+    expect(deps.isRegistered<ServiceInterface>(), isFalse);
   });
 
   test(
       'debugOwnDependencies lists the alias under its own key, resolving '
       'to the same value', () {
-    final scopeDeps = Deps.detached()
-      ..addAll([
-        Dependency<ServiceImpl>((_, __) => ServiceImpl()),
-        const Alias<ServiceInterface, ServiceImpl>(),
-      ]);
+    deps.addAll([
+      Dependency<ServiceImpl>((_, __) => ServiceImpl()),
+      const Alias<ServiceInterface, ServiceImpl>(),
+    ]);
 
-    final resolved = scopeDeps.get<ServiceInterface>();
+    final resolved = deps.get<ServiceInterface>();
 
     final byKey = {
-      for (final entry in scopeDeps.debugOwnDependencies) entry.key: entry,
+      for (final entry in deps.debugOwnDependencies) entry.key: entry,
     };
 
     expect(byKey.keys, containsAll(<Type>[ServiceImpl, ServiceInterface]));

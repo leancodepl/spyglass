@@ -1,9 +1,9 @@
 import 'package:spyglass/spyglass.dart';
 
 void main() {
-  deps.add(Dependency.value(Greeter()));
+  Deps.global.add(Dependency.value(Greeter()));
 
-  final greeter = deps.get<Greeter>();
+  final greeter = Deps.global.get<Greeter>();
 
   greeter.greet();
 }

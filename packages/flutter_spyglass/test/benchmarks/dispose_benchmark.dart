@@ -30,7 +30,7 @@ void main() {
       warmUpRuns: warmUp,
       measuredRuns: runs,
       setUp: () async {
-        final scopeDeps = Deps.root.fork()
+        final scopeDeps = Deps.global.fork()
           ..addAll([
             for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
           ])

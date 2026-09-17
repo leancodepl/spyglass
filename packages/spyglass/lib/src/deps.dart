@@ -1,4 +1,3 @@
-import 'dart:async' as async;
 import 'dart:async';
 
 import 'package:rxdart/rxdart.dart';
@@ -9,15 +8,6 @@ import 'deps_events.dart';
 import 'deps_exceptions.dart';
 import 'managed_dependency.dart';
 import 'types.dart';
-
-final _zoneKey = Object();
-
-/// The ambient [Deps] for the current [Zone] - whatever [Deps.runZoned] this
-/// code is running under, or [Deps.root] outside of one.
-Deps get globalDeps => Zone.current[_zoneKey] as Deps? ?? Deps.root;
-
-/// Alias for [globalDeps].
-Deps get deps => globalDeps;
 
 /// Whether this is a debug build - the same computation Flutter's own
 /// `kDebugMode` uses, replicated here so it works without a dependency on
@@ -53,30 +43,21 @@ const bool spyglassDiagnosticsMode = bool.fromEnvironment(
 /// a deps object that it doesn't contain but its ancestors will return
 /// the value from the nearest ancestor.
 class Deps extends EventNotifier<DepsEvent> {
-  /// Returns the current global [Deps] instance. See also [globalDeps].
-  factory Deps() => globalDeps;
+  /// Creates empty [Deps]
+  Deps({String? debugLabel}) : this._(parent: null, debugLabel: debugLabel);
 
-  /// Input [values] are copied.
   Deps._({
     required this.parent,
-    Map<Object, ManagedDependency>? values,
     this.debugLabel,
-  }) : _values = {...?values} {
+  }) {
     _setupParentSubscription();
     if (spyglassDiagnosticsMode) {
       parent?._children.add(this);
     }
   }
 
-  /// Creates a completely empty [Deps], detached from the [globalDeps] root
-  /// ancestor.
-  Deps.detached({String? debugLabel})
-      : this._(parent: null, debugLabel: debugLabel);
-
-  /// The root [Deps] instance. This is the ancestor of all other [Deps].
-  /// Most likely this is the same as [globalDeps] unless you're using
-  /// [Deps.runZoned].
-  static final root = Deps.detached();
+  /// The global [Deps] instance
+  static final global = Deps(debugLabel: 'global');
 
   /// A label to help identify this scope in logs, error messages, and
   /// diagnostics - e.g. flutter_spyglass's diagnostics extensions, which
@@ -102,23 +83,11 @@ class Deps extends EventNotifier<DepsEvent> {
   Deps fork({String? debugLabel}) =>
       Deps._(parent: this, debugLabel: debugLabel);
 
-  /// Run the given [body] in a new [Zone] with this [Deps]
-  /// as [globalDeps].
-  R runZoned<R>(R Function() body) {
-    return async.runZoned(
-      body,
-      zoneValues: {
-        _zoneKey: this,
-      },
-    );
-  }
-
-  /// The scope this one was [fork]ed from, or `null` for [Deps.root] or a
-  /// scope created via [Deps.detached].
+  /// The scope this one was [fork]ed from, or `null` for [Deps.global] or a
+  /// scope created via [Deps()].
   final Deps? parent;
 
-  /// Whether this scope has no [parent] - i.e. it's [Deps.root] or was
-  /// created via [Deps.detached].
+  /// Whether this scope has no [parent]
   bool get isRoot => parent == null;
   StreamSubscription<void>? _parentSubscription;
   bool _isDisposed = false;
@@ -134,7 +103,7 @@ class Deps extends EventNotifier<DepsEvent> {
   /// Whether [dispose] has already been called on this scope.
   bool get isDisposed => _isDisposed;
 
-  final Map<Object, ManagedDependency> _values;
+  final Map<Object, ManagedDependency> _values = {};
 
   /// Live child scopes created via [fork] - only tracked when
   /// [spyglassDiagnosticsMode] is enabled, so this is otherwise always

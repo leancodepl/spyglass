@@ -7,11 +7,16 @@ class Counter extends Cubit<int> {
 }
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   test(
       'the bloc/cubit is closed automatically when removed, via '
       'BlocBase.close()', () async {
-    final deps = Deps.detached()
-      ..add(BlocDependency<Counter>((_, __) => Counter(0)));
+    deps.add(BlocDependency<Counter>((_, __) => Counter(0)));
 
     final counter = deps.get<Counter>();
     expect(counter.isClosed, isFalse);
@@ -24,16 +29,15 @@ void main() {
 
   test('an explicit dispose overrides the default close()', () async {
     var customDisposeCalls = 0;
-    final deps = Deps.detached()
-      ..add(
-        BlocDependency<Counter>(
-          (_, __) => Counter(0),
-          dispose: (counter) {
-            customDisposeCalls++;
-            return counter.close();
-          },
-        ),
-      );
+    deps.add(
+      BlocDependency<Counter>(
+        (_, __) => Counter(0),
+        dispose: (counter) {
+          customDisposeCalls++;
+          return counter.close();
+        },
+      ),
+    );
 
     final counter = deps.get<Counter>();
     deps.remove<Counter>();

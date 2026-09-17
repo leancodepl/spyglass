@@ -63,7 +63,7 @@ class Dependency<T extends Object> implements Registerable {
   ///
   /// Called once with `oldValue: null` to produce the first value. There's
   /// no separate declaration of "what this reacts to": reading another
-  /// dependency through [deps]'s [DepsReader.watchInstance] (instead of the
+  /// dependency through deps's [DepsReader.watchInstance] (instead of the
   /// untracked [DepsReader.get]) *is* how this declares it, discovered
   /// fresh on every run - so [create] is called again, this time with the
   /// previous result as `oldValue`, whenever a key it read via
