@@ -7,7 +7,7 @@ void main() {
     "DepsProvider's internal InheritedWidget surfaces the live scope's "
     'diagnostics tree',
     (tester) async {
-      final deps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+      final deps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
 
       await tester.pumpWidget(
         DepsProvider(
@@ -46,7 +46,7 @@ void main() {
   );
 
   test('toDiagnosticsNode() prefers debugLabel over identity in its name', () {
-    final deps = Deps.detached(debugLabel: 'AuthScope');
+    final deps = Deps(debugLabel: 'AuthScope');
 
     expect(deps.toDiagnosticsNode().toStringDeep(), contains('AuthScope'));
 
@@ -57,7 +57,7 @@ void main() {
     'toDiagnosticsNode() shows an unresolved dependency, then resolved '
     'after get()',
     () {
-      final deps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+      final deps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
 
       expect(
         deps.toDiagnosticsNode().toStringDeep(),
@@ -78,7 +78,7 @@ void main() {
     'toDiagnosticsNode() nests fork()ed child scopes only when '
     'spyglassDiagnosticsMode is enabled',
     () {
-      final root = Deps.detached();
+      final root = Deps();
       final child = root.fork();
 
       final tree = root.toDiagnosticsNode().toStringDeep();
@@ -95,7 +95,7 @@ void main() {
   );
 
   test('toDiagnosticsNode() flags a disposed scope', () async {
-    final deps = Deps.detached();
+    final deps = Deps();
     await deps.dispose();
 
     expect(deps.toDiagnosticsNode().toStringDeep(), contains('disposed'));
@@ -104,7 +104,7 @@ void main() {
   test(
       'toDiagnosticsNode() flags whether a dependency was registered '
       'standalone or as part of a Module', () {
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(
           Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'BarModule'))
       ..add(Dependency<Foo>((_, __) => Foo()));

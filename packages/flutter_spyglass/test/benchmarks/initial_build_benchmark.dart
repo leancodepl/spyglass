@@ -27,7 +27,7 @@ void main() {
         currentDeps = null;
       },
       body: () async {
-        final scopeDeps = Deps.root.fork()
+        final scopeDeps = Deps.global.fork()
           ..addAll([
             for (var i = 0; i < serviceCount; i++) spyglassFactories[i](i),
           ])

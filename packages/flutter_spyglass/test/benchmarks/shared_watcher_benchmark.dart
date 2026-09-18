@@ -37,7 +37,7 @@ void main() {
         currentDeps = null;
       },
       body: () async {
-        final scopeDeps = Deps.root.fork()
+        final scopeDeps = Deps.global.fork()
           ..add(spyglassFactories[0](0))
           ..ensureResolved([Svc0]);
         currentDeps = scopeDeps;
@@ -96,7 +96,7 @@ void main() {
     // --- Rebuild: mount once, then repeatedly mutate the shared service.
     var nextValue = 1000;
 
-    final scopeDeps = Deps.root.fork()
+    final scopeDeps = Deps.global.fork()
       ..add(spyglassFactories[0](0))
       ..ensureResolved([Svc0]);
 
@@ -171,7 +171,7 @@ void main() {
       warmUpRuns: warmUp,
       measuredRuns: runs,
       setUp: () async {
-        final d = Deps.root.fork()
+        final d = Deps.global.fork()
           ..add(spyglassFactories[0](0))
           ..ensureResolved([Svc0]);
         currentDeps = d;

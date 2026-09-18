@@ -2,6 +2,12 @@ import 'package:spyglass/spyglass.dart';
 import 'package:test/test.dart';
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   test('instant', () {
     deps
       ..add(Dependency<Bar>((deps, _) => Bar()))
@@ -12,7 +18,7 @@ void main() {
 
   test('create mutates the old value in place when a tracked key changes',
       () async {
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency((deps, _) => Baz(label: 'first')))
       ..add(
         Dependency<Qux>((deps, oldValue) {
@@ -34,7 +40,7 @@ void main() {
   });
 
   test('create returns a fresh value when a tracked key changes', () async {
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency((deps, _) => Baz(label: 'first')))
       ..add(Dependency<Qux>((deps, _) => Qux(baz: deps.watchInstance())))
       ..get<Qux>();
@@ -51,7 +57,7 @@ void main() {
       'create never re-runs when it only reads through get(), not '
       'watchInstance()', () async {
     var createCalls = 0;
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency((deps, _) => Baz(label: 'first')))
       ..add(
         Dependency<Qux>((deps, oldValue) {
@@ -75,7 +81,7 @@ void main() {
   test(
       'create only reacts to the keys it actually reads this run - '
       'unread keys are ignored even though they change', () async {
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency((_, __) => Corge('corge-1')))
       ..add(Dependency((_, __) => Grault('grault-1')))
       ..add(
@@ -106,7 +112,7 @@ void main() {
     // taking a different branch (e.g. based on oldValue) on a later run.
     var useCorge = true;
 
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency((_, __) => Corge('corge-1')))
       ..add(Dependency((_, __) => Grault('grault-1')))
       ..add(
@@ -146,7 +152,7 @@ void main() {
     var createObserverCalls = 0;
     var disposeCalls = 0;
 
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(
         Dependency<Bar>(
           (_, __) => Bar(),
@@ -179,7 +185,7 @@ void main() {
       'subscribers to the same key', () async {
     var createObserverCalls = 0;
 
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(
         Dependency<Bar>(
           (_, __) => Bar(),
@@ -206,7 +212,7 @@ void main() {
       'with multiple subscribers', () async {
     var createObserverCalls = 0;
 
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(
         Dependency<Bar>(
           (_, __) => Bar(),
@@ -236,7 +242,7 @@ void main() {
           createObserver: _CounterObserver.new,
         );
 
-    final scopeDeps = Deps.detached()..add(makeCounter(1));
+    final scopeDeps = Deps()..add(makeCounter(1));
 
     final values = <int>[];
     final sub = scopeDeps.watch<Counter>().listen((c) => values.add(c.value));
@@ -272,7 +278,7 @@ void main() {
               _CounterObserver(c, onDispose: () => disposedLabels.add(label)),
         );
 
-    final scopeDeps = Deps.detached()..add(makeCounter('first', 1));
+    final scopeDeps = Deps()..add(makeCounter('first', 1));
 
     final sub = scopeDeps.watch<Counter>().listen((_) {});
     await Future<void>.delayed(Duration.zero);
@@ -289,7 +295,7 @@ void main() {
   });
 
   test('get() throws after Deps.dispose()', () async {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+    final scopeDeps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
     expect(scopeDeps.get<Bar>(), isA<Bar>());
 
     await scopeDeps.dispose();
@@ -301,7 +307,7 @@ void main() {
   });
 
   test('add() throws after Deps.dispose(), but remove() is a no-op', () async {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+    final scopeDeps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
     await scopeDeps.dispose();
 
     expect(
@@ -314,7 +320,7 @@ void main() {
   test(
       'get() throws DependencyNotRegisteredException for an unknown key, '
       'but tryGet() returns null', () {
-    final scopeDeps = Deps.detached();
+    final scopeDeps = Deps();
 
     expect(
       () => scopeDeps.get<Bar>(),
@@ -325,7 +331,7 @@ void main() {
 
   test('peek() returns the current value without triggering creation', () {
     var created = false;
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency<Bar>((_, __) {
         created = true;
         return Bar();
@@ -342,19 +348,19 @@ void main() {
   test(
       'debugLabel shows up in toString(), falling back to root/identity '
       'when unset', () {
-    final labeled = Deps.detached(debugLabel: 'AuthScope');
+    final labeled = Deps(debugLabel: 'AuthScope');
     expect(labeled.toString(), equals("Deps('AuthScope')"));
 
     final forkedLabel = labeled.fork(debugLabel: 'ChildScope');
     expect(forkedLabel.toString(), equals("Deps('ChildScope')"));
 
-    final unlabeled = Deps.detached();
+    final unlabeled = Deps();
     expect(unlabeled.toString(), isNot(contains('null')));
-    expect(Deps.root.toString(), equals('Deps(root)'));
+    expect(Deps.global.toString(), equals("Deps('global')"));
   });
 
   test('isDisposed reflects dispose()', () async {
-    final scopeDeps = Deps.detached();
+    final scopeDeps = Deps();
     expect(scopeDeps.isDisposed, isFalse);
     await scopeDeps.dispose();
     expect(scopeDeps.isDisposed, isTrue);
@@ -363,7 +369,7 @@ void main() {
   test(
       'debugOwnDependencies reports registration and resolution state, '
       'regardless of spyglassDiagnosticsMode', () {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+    final scopeDeps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
 
     final beforeResolve = scopeDeps.debugOwnDependencies.single;
     expect(beforeResolve.key, equals(Bar));
@@ -380,7 +386,7 @@ void main() {
   test(
       'debugChildren tracks live fork()ed scopes, only when '
       'spyglassDiagnosticsMode is enabled', () {
-    final root = Deps.detached();
+    final root = Deps();
     expect(root.debugChildren, isEmpty);
 
     final child = root.fork();
@@ -391,7 +397,7 @@ void main() {
   });
 
   test('debugChildren drops a scope once it is disposed', () async {
-    final root = Deps.detached();
+    final root = Deps();
     final child = root.fork();
     await child.dispose();
     expect(root.debugChildren, isNot(contains(child)));
@@ -399,7 +405,7 @@ void main() {
 
   test('DependencyCycleException is thrown for a self-referential create()',
       () {
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency<Bar>((deps, _) {
         deps.get<Bar>();
         return Bar();
@@ -414,7 +420,7 @@ void main() {
   test(
       'add() leaves the existing value in place when cacheKey matches '
       '(including both being null), and replaces when it differs', () {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+    final scopeDeps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
     final first = scopeDeps.get<Bar>();
 
     // No cacheKey on either side - null == null - left alone.
@@ -437,7 +443,7 @@ void main() {
   });
 
   test('replace() always replaces, even when cacheKey matches', () {
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(Dependency<Bar>((_, __) => Bar(), cacheKey: 'v1'));
     final first = scopeDeps.get<Bar>();
 
@@ -451,7 +457,7 @@ void main() {
       Dependency<Bar>((_, __) => Bar()),
       Dependency<Foo>((deps, _) => Foo(bar: deps.get())),
     ]);
-    final scopeDeps = Deps.detached()..add(module);
+    final scopeDeps = Deps()..add(module);
 
     expect(scopeDeps.isRegistered<Bar>(), isTrue);
     expect(scopeDeps.isRegistered<Foo>(), isTrue);
@@ -469,7 +475,7 @@ void main() {
           Dependency<Bar>((_, __) => Bar()),
           Dependency<Foo>((deps, _) => Foo(bar: deps.get())),
         ]);
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(makeModule())
       // A fresh Module instance describing the same dependency types
       // removes the same keys - lookup is by type, not Module identity.
@@ -482,7 +488,7 @@ void main() {
   test('remove() accepts a plain Dependency, equivalent to removing its key',
       () {
     final dependency = Dependency<Bar>((_, __) => Bar());
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(dependency)
       ..remove(dependency);
 
@@ -492,7 +498,7 @@ void main() {
   test(
       'remove() throws ArgumentError for a value that is neither a Type '
       'nor a Registerable', () {
-    final scopeDeps = Deps.detached()..add(Dependency<Bar>((_, __) => Bar()));
+    final scopeDeps = Deps()..add(Dependency<Bar>((_, __) => Bar()));
 
     expect(
       () => scopeDeps.remove(42),
@@ -502,7 +508,7 @@ void main() {
 
   test('debugOwnDependencies reports isStandalone and module correctly', () {
     final module = Module([Dependency<Bar>((_, __) => Bar())], debugLabel: 'M');
-    final scopeDeps = Deps.detached()
+    final scopeDeps = Deps()
       ..add(module)
       ..add(Dependency<Foo>((deps, _) => Foo(bar: deps.get())));
 

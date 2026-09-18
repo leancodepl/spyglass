@@ -8,9 +8,15 @@ class Counter extends Cubit<int> {
 }
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   testWidgets('builds and listens for every emission by default',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -37,13 +43,11 @@ void main() {
 
     expect(find.text('1'), findsOneWidget);
     expect(seen, equals([1]));
-
-    await deps.dispose();
   });
 
   testWidgets('buildWhen and listenWhen are evaluated independently',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -85,13 +89,11 @@ void main() {
     expect(seen, equals([1]));
     expect(builds, equals(2));
     expect(find.text('2'), findsOneWidget);
-
-    await deps.dispose();
   });
 
   testWidgets('an explicit bloc is used instead of the one from Deps',
       (tester) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
     final explicitCounter = Counter(100);
@@ -119,7 +121,6 @@ void main() {
     expect(find.text('101'), findsOneWidget);
     expect(seen, equals([101]));
 
-    await deps.dispose();
     await explicitCounter.close();
   });
 }

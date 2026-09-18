@@ -9,7 +9,7 @@ void main() {
     var buildsA = 0;
     var buildsB = 0;
 
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(ChangeNotifierDependency<CounterA>((_, __) => CounterA(0)))
       ..add(ChangeNotifierDependency<CounterB>((_, __) => CounterB(0)))
       ..ensureResolved([CounterA, CounterB]);
@@ -54,7 +54,7 @@ void main() {
   testWidgets(
       'unmounting one shared watcher does not affect the remaining '
       'watchers of the same dependency', (tester) async {
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(ChangeNotifierDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -98,7 +98,7 @@ void main() {
   testWidgets(
       'the same type can be watched with different observeState values '
       'at once', (tester) async {
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(ChangeNotifierDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -160,7 +160,7 @@ void main() {
 
   testWidgets('multiple selectors on the same dependency rebuild independently',
       (tester) async {
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(ChangeNotifierDependency<Pair>((_, __) => Pair(0, 100)))
       ..ensureResolved([Pair]);
 
@@ -216,7 +216,7 @@ void main() {
   testWidgets(
       'mutating a dependency after its watcher unmounted does not throw',
       (tester) async {
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(ChangeNotifierDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -244,7 +244,7 @@ void main() {
   testWidgets(
       'a key present in both the old and new register list is left alone, '
       'not recreated', (tester) async {
-    final deps = Deps.detached();
+    final deps = Deps();
 
     Widget buildTree(int instanceId) => MaterialApp(
           home: DepsProvider(
@@ -275,7 +275,7 @@ void main() {
   testWidgets(
       'a changed cacheKey in register forces a fresh instance under the '
       'same key', (tester) async {
-    final deps = Deps.detached();
+    final deps = Deps();
 
     Widget buildTree(int tenantId) => MaterialApp(
           home: DepsProvider(
@@ -311,7 +311,7 @@ void main() {
   testWidgets(
       'a key removed from register is disposed; a key added to register '
       'is created', (tester) async {
-    final deps = Deps.detached();
+    final deps = Deps();
     final disposed = <String>[];
 
     Widget buildTree({required bool includeA, required bool includeB}) =>

@@ -18,6 +18,13 @@ class DepsProvider extends StatefulWidget {
     this.builder,
   }) : assert(child != null || builder != null);
 
+  /// Provides the [Deps.global] scope.
+  DepsProvider.global({super.key, this.child, this.builder})
+      : deps = Deps.global,
+        register = null,
+        introduceScope = false,
+        assert(child != null || builder != null);
+
   /// Provide a custom [Deps] instance that dependencies listed in [register]
   /// should be added to. This will also influence the provided scope to the
   /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch].
@@ -41,8 +48,12 @@ class DepsProvider extends StatefulWidget {
 
   /// Obtain the nearest [Deps] scope.
   static Deps of(BuildContext context) {
-    return context.getInheritedWidgetOfExactType<_DepsInherited>()?.deps ??
-        globalDeps;
+    return context.getInheritedWidgetOfExactType<_DepsInherited>()!.deps;
+  }
+
+  /// Obtain the nearest [Deps] scope or null if not found.
+  static Deps? maybeOf(BuildContext context) {
+    return context.getInheritedWidgetOfExactType<_DepsInherited>()?.deps;
   }
 
   /// Watch a dependency fully - see [DepsContext.watch].
@@ -133,7 +144,7 @@ class _DepsProviderState extends State<DepsProvider> {
   Set<DependencyKey> _registeredKeys = const {};
   late Deps _registeredIn;
 
-  void _updateDeps(Deps parentScope) {
+  void _updateDeps(Deps? parentScope) {
     final depsProp = widget.deps;
     final introduceScope = widget.introduceScope;
 
@@ -147,7 +158,9 @@ class _DepsProviderState extends State<DepsProvider> {
 
     final previouslyOwned = _ownedDeps;
 
-    _deps = depsProp ?? (introduceScope ? parentScope.fork() : parentScope);
+    _deps = depsProp ??
+        (introduceScope ? parentScope?.fork() : parentScope) ??
+        Deps();
     _ownedDeps = (introduceScope && depsProp == null) ? _deps : null;
 
     _lastDepsProp = depsProp;
@@ -202,7 +215,7 @@ class _DepsProviderState extends State<DepsProvider> {
 
   @override
   Widget build(BuildContext context) {
-    final parentScope = DepsProvider.of(context);
+    final parentScope = DepsProvider.maybeOf(context);
     _updateDeps(parentScope);
     _updateRegistrations();
 

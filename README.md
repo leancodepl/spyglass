@@ -224,9 +224,9 @@ authScope.get<SomeGlobalService>(); // inherited from deps (the parent)
 await authScope.dispose(); // disposes only what authScope itself registered
 ```
 
-`Deps.detached()` creates a scope with no parent at all - useful for tests,
+`Deps()` creates a scope with no parent at all - useful for tests,
 so each test gets a clean, isolated container instead of sharing the
-global `deps`/`Deps.root`. `Deps.runZoned` lets you run code with a
+global `deps`/`Deps.global`. `Deps.runZoned` lets you run code with a
 specific `Deps` as the ambient `deps`/`globalDeps` for that zone, without
 needing to thread it through every call explicitly.
 

@@ -16,7 +16,7 @@ void main() {
   test(
       'ChangeNotifierDependency calls dispose() automatically when '
       'removed', () async {
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(ChangeNotifierDependency<TrackedNotifier>(
           (_, __) => TrackedNotifier()));
 
@@ -32,7 +32,7 @@ void main() {
   test("an explicit dispose overrides ChangeNotifierDependency's default",
       () async {
     var customDisposeCalls = 0;
-    Deps.detached()
+    Deps()
       ..add(
         ChangeNotifierDependency<TrackedNotifier>(
           (_, __) => TrackedNotifier(),
@@ -54,7 +54,7 @@ void main() {
       'ListenableDependency (not ChangeNotifierDependency) has no default '
       'dispose - not every Listenable is disposable', () async {
     var disposeCalls = 0;
-    final deps = Deps.detached()
+    final deps = Deps()
       ..add(
         ListenableDependency<TrackedNotifier>(
           (_, __) => TrackedNotifier(),

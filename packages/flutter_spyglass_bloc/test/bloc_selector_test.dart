@@ -8,10 +8,16 @@ class Counter extends Cubit<int> {
 }
 
 void main() {
+  late Deps deps;
+
+  setUp(() => deps = Deps());
+
+  tearDown(() => deps.dispose());
+
   testWidgets('rebuilds with the selected value and only when it changes', (
     tester,
   ) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -51,14 +57,12 @@ void main() {
 
     expect(builds, equals(2));
     expect(find.text('false'), findsOneWidget);
-
-    await deps.dispose();
   });
 
   testWidgets('an explicit bloc is used instead of the one from Deps', (
     tester,
   ) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
     final explicitCounter = Counter(100);
@@ -86,14 +90,13 @@ void main() {
 
     expect(find.text('101'), findsOneWidget);
 
-    await deps.dispose();
     await explicitCounter.close();
   });
 
   testWidgets('rebuilds against a newly-registered bloc instance', (
     tester,
   ) async {
-    final deps = Deps.detached()
+    deps
       ..add(BlocDependency<Counter>((_, __) => Counter(0)))
       ..ensureResolved([Counter]);
 
@@ -123,7 +126,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('43'), findsOneWidget);
-
-    await deps.dispose();
   });
 }
