@@ -18,6 +18,13 @@ class DepsProvider extends StatefulWidget {
     this.builder,
   }) : assert(child != null || builder != null);
 
+  /// Provides the [Deps.global] scope.
+  DepsProvider.global({super.key, this.child, this.builder})
+      : deps = Deps.global,
+        register = null,
+        introduceScope = false,
+        assert(child != null || builder != null);
+
   /// Provide a custom [Deps] instance that dependencies listed in [register]
   /// should be added to. This will also influence the provided scope to the
   /// [child]/[builder] by [DepsProvider.of] and [DepsProvider.watch].
